@@ -1,24 +1,30 @@
-import logo from './logo.svg';
+import { configureStore } from '@reduxjs/toolkit'
+import createSagaMiddleware from 'redux-saga'
+import logger from 'redux-logger'
+import words from './redux/reducers/words'
+import saga from './redux/sagas'
+
+import Arbor from './components/Arbor'
+import { Provider } from 'react-redux'
+
 import './App.css';
+
+const sagaMiddleware = createSagaMiddleware()
+
+const store = configureStore({
+  reducer: {
+    words,
+  },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware).concat(logger)
+})
+
+sagaMiddleware.run(saga)
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Provider store={store}>
+      <Arbor />
+    </Provider>
   );
 }
 
