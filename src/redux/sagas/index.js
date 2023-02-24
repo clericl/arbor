@@ -1,9 +1,35 @@
 import BigQuery from '../../utils/BigQuery'
 import { all, call, put, takeLatest } from 'redux-saga/effects'
-import { branchesGenerated, fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchParentsFailed, fetchParentsSucceeded, plantSeed, requestFetchParents, treeGenerated, trunkGenerated } from '../actions'
+import { branchesGenerated, fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchingTree, fetchParentsFailed, fetchParentsSucceeded, fetchTreeFailed, fetchTreeSucceeded, plantSeed, saveTreeFailed, saveTreeSucceeded, savingTree, trunkGenerated } from '../actions'
+import { growBranches, growTrunk } from '../reducers/words'
+
+function* fetchTree(seed) {
+  yield put(fetchingTree())
+
+  try {
+    const data = yield call([BigQuery, 'fetchTree'], seed)
+    yield put(fetchTreeSucceeded())
+
+    return data
+  } catch(e) {
+    yield put(fetchTreeFailed())
+  }
+}
+
+function* saveTree(seed, trunk, branches) {
+  yield put(savingTree())
+
+  try {
+    const data = yield call([BigQuery, 'saveTree'], { seed, trunk, branches })
+    yield put(saveTreeSucceeded())
+
+    return data
+  } catch(e) {
+    yield put(saveTreeFailed())
+  }
+}
 
 function* fetchParents(nodeOrSource) {
-  console.log(nodeOrSource)
   const source = typeof nodeOrSource === 'string' ? nodeOrSource : nodeOrSource.source
 
   yield put(fetchingParents())
@@ -19,7 +45,6 @@ function* fetchParents(nodeOrSource) {
 }
 
 function* fetchChildren(nodeOrSource) {
-  console.log(nodeOrSource)
   const source = typeof nodeOrSource === 'string' ? nodeOrSource : nodeOrSource.source
 
   yield put(fetchingChildren())
@@ -35,11 +60,11 @@ function* fetchChildren(nodeOrSource) {
 }
 
 function* extendTrunk(node) {
-  let branch = [node]
+  let trunk = [node]
   let canExtend = true
 
   while (canExtend) {
-    const nextParentData = yield call(fetchParents, branch[branch.length - 1].source)
+    const nextParentData = yield call(fetchParents, trunk[trunk.length - 1].source)
 
     if (nextParentData?.meta?.count) {
       if (nextParentData.meta.count > 1) {
@@ -50,21 +75,25 @@ function* extendTrunk(node) {
             target: datum.source,
           }
           const newBranch = yield call(extendTrunk, newNode)
-          branch = branch.concat(newBranch)
+          trunk = trunk.concat(newBranch)
+
+          yield put(growTrunk(trunk))
         }
       } else {
-        branch.push({
+        trunk = trunk.concat([{
           source: nextParentData.data[0].target,
           relation: 'rel:etymological_origin_of',
           target: nextParentData.data[0].source,
-        })
+        }])
+
+        yield put(growTrunk(trunk))
       }
     } else {
       canExtend = false
     }
   }
 
-  return branch
+  return trunk
 }
 
 function* extendBranch(node, ignore) {
@@ -82,9 +111,11 @@ function* extendBranch(node, ignore) {
           oldNode.source === datum.target
         )
       })) {
-        branch.push(datum)
+        branch = branch.concat([datum])
         const newBranch = yield call(extendBranch, datum, ignore)
         branch = branch.concat(newBranch)
+
+        yield put(growBranches(branch))
       }
     }
   }
@@ -95,23 +126,37 @@ function* extendBranch(node, ignore) {
 function* buildTree(action) {
   if (!action.payload) return false
 
-  const baseNode = {
-    source: action.payload,
-    relation: 'rel:seed',
-    target: null,
-  }
+  const fetchedTreeRes = yield call(fetchTree, action.payload)
+  if (fetchedTreeRes.meta.count) {
+    const fetchedTree = JSON.parse(fetchedTreeRes.data[0].body)
 
-  const trunk = yield call(extendTrunk, baseNode)
-  yield put(trunkGenerated(trunk))
-
-  let branches = []
-
-  for (const node of trunk) {
-    const newBranch = yield call(extendBranch, node, trunk)
-    branches = branches.concat(newBranch)
-  }
+    yield put(growTrunk(fetchedTree.trunk))
+    yield put(growBranches(fetchedTree.branches))
+    yield put(trunkGenerated(fetchedTree.trunk))
+    yield put(branchesGenerated(fetchedTree.branches))
+  } else {
+    const baseNode = {
+      source: action.payload,
+      relation: 'rel:seed',
+      target: null,
+    }
   
-  yield put(branchesGenerated(branches))
+    const trunk = yield call(extendTrunk, baseNode)
+    yield put(growTrunk(trunk))
+    yield put(trunkGenerated(trunk))
+  
+    let branches = []
+  
+    for (const node of trunk) {
+      const newBranch = yield call(extendBranch, node, trunk)
+      branches = branches.concat(newBranch)
+    }
+    
+    yield put(growBranches(branches))
+    yield put(branchesGenerated(branches))
+
+    yield call(saveTree, action.payload, trunk, branches)
+  }
 }
 
 function* watchPlantSeed() {

@@ -1,19 +1,45 @@
 import { createSlice } from "@reduxjs/toolkit";
+import isEqual from 'lodash.isequal'
 
-const wordsSlice = createSlice({
-  name: 'words',
+const treeSlice = createSlice({
+  name: 'tree',
   initialState: {
-    data: [],
+    trunk: [],
+    branches: [],
   },
   reducers: {
-    updateData(state, action) {
-      state.data = action.payload
-    }
+    growTrunk(state, action) {
+      const newTrunk = [
+        ...state.trunk,
+        ...action.payload,
+      ]
+
+      const newSet = new Set(newTrunk)
+      
+      state.trunk = Array.from(newSet)
+    },
+    growBranches(state, action) {
+      const newBranches = state.branches.slice()
+
+      action.payload.forEach((newNode) => {
+        if (!newBranches.find((oldNode) => isEqual(oldNode, newNode))) {
+          newBranches.push(newNode)
+        }
+      })
+      
+      state.branches = newBranches
+    },
+    resetTree(state) {
+      state.trunk = []
+      state.branches = []
+    },
   }
 })
 
 export const {
-  updateData
-} = wordsSlice.actions
+  growTrunk,
+  growBranches,
+  resetTree,
+} = treeSlice.actions
 
-export default wordsSlice.reducer
+export default treeSlice.reducer

@@ -1,5 +1,15 @@
 import { createAction } from "@reduxjs/toolkit";
 
+export const requestFetchTree = createAction('REQUEST_FETCH_TREE')
+export const fetchingTree = createAction('FETCHING_TREE')
+export const fetchTreeSucceeded = createAction('FETCH_TREE_SUCCEEDED')
+export const fetchTreeFailed = createAction('FETCH_TREE_FAILED')
+
+export const requestSaveTree = createAction('REQUEST_SAVE_TREE')
+export const savingTree = createAction('SAVING_TREE')
+export const saveTreeSucceeded = createAction('SAVE_TREE_SUCCEEDED')
+export const saveTreeFailed = createAction('SAVE_TREE_FAILED')
+
 export const requestFetchParents = createAction('REQUEST_FETCH_PARENTS')
 export const fetchingParents = createAction('FETCHING_PARENTS')
 export const fetchParentsSucceeded = createAction('FETCH_PARENTS_SUCCEEDED')
