@@ -5,37 +5,7 @@
 import * as d3 from 'd3'
 
 class Chart {
-  constructor(mountEl, options) {
-    this.mountEl = mountEl
-    this.options = options
-
-    this.root = null
-    this.svg = null
-  }
-
-  ingestData(data, {
-    path, // as an alternative to id and parentId, returns an array identifier, imputing internal nodes
-    id = Array.isArray(data) ? d => d.source : null, // if tabular data, given a d in data, returns a unique identifier (string)
-    parentId = Array.isArray(data) ? d => d.target : null, // if tabular data, given a node d, returns its parent’s identifier
-    children, // if hierarchical data, given a d in data, returns its children
-    sort, // how to sort nodes prior to layout (e.g., (a, b) => d3.descending(a.height, b.height))
-  } = {}) {
-    // If id and parentId options are specified, or the path option, use d3.stratify
-    // to convert tabular data to a hierarchy; otherwise we assume that the data is
-    // specified as an object {children} with nested objects (a.k.a. the “flare.json”
-    // format), and use d3.hierarchy.
-    const root = path != null ? d3.stratify().path(path)(data)
-    : id != null || parentId != null ? d3.stratify().id(id).parentId(parentId)(data)
-    : d3.hierarchy(data, children);
-    
-    // Sort the nodes.
-    if (sort != null) root.sort(sort);
-    
-    this.root = root
-    return this.root
-  }
-
-  layOutTree({
+  constructor(mountEl, {
     tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
     separation = tree === d3.tree ? (a, b) => (a.parent == b.parent ? 1 : 2) / a.depth : (a, b) => a.parent == b.parent ? 1 : 2,
     label = d => d.source, // given a node d, returns the display name
@@ -63,7 +33,94 @@ class Chart {
     haloWidth = 3, // padding around the labels
     fontSize = 10, // font size of labels
   } = {}) {
-    tree().size([2 * Math.PI, radius]).separation(separation)(this.root);
+    this.mountEl = mountEl
+    this.options = {
+      tree,
+      separation,
+      label,
+      title,
+      link,
+      linkTarget,
+      width,
+      height,
+      margin,
+      marginTop,
+      marginRight,
+      marginBottom,
+      marginLeft,
+      radius,
+      r,
+      padding,
+      fill,
+      fillOpacity,
+      stroke,
+      strokeWidth,
+      strokeOpacity,
+      strokeLinejoin,
+      strokeLinecap,
+      halo,
+      haloWidth,
+      fontSize,
+    }
+
+    this.root = null
+    this.svg = null
+  }
+
+  ingestData(data) {
+    const {
+      sort,
+      tree,
+      radius,
+      separation,
+    } = this.options
+
+    const id = Array.isArray(data) ? d => d.source : null // if tabular data, given a d in data, returns a unique identifier (string)
+    const parentId = Array.isArray(data) ? d => d.target : null // if tabular data, given a node d, returns its parent’s identifier
+
+    try {
+      // If id and parentId options are specified, or the path option, use d3.stratify
+      // to convert tabular data to a hierarchy; otherwise we assume that the data is
+      // specified as an object {children} with nested objects (a.k.a. the “flare.json”
+      // format), and use d3.hierarchy.
+      const root = d3.stratify().id(id).parentId(parentId)(data)
+  
+      // Sort the nodes.
+      if (sort != null) root.sort(sort);
+  
+      // Compute the layout.
+      tree().size([2 * Math.PI, radius]).separation(separation)(root);
+      
+      this.root = root
+    } catch (e) {
+      console.warn(e)
+    }
+
+    return this.root
+  }
+
+  layOutTree() {
+    const {
+      radius,
+      label,
+      marginLeft,
+      marginTop,
+      width,
+      height,
+      fontSize,
+      stroke,
+      strokeOpacity,
+      strokeLinecap,
+      strokeLinejoin,
+      strokeWidth,
+      link,
+      linkTarget,
+      fill,
+      title,
+      r,
+      halo,
+      haloWidth,
+    } = this.options
 
     const descendants = this.root.descendants();
     const L = label == null ? null : descendants.map(d => label(d.data, d));
@@ -96,7 +153,10 @@ class Chart {
     .join("a")
       .attr("xlink:href", link == null ? null : d => link(d.data, d))
       .attr("target", link == null ? null : linkTarget)
-      .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`);
+      .attr("transform", d => {
+        console.log(d)
+        return `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`
+      });
 
     node.append("circle")
       .attr("fill", d => d.children ? stroke : fill)
@@ -121,26 +181,32 @@ class Chart {
     return this.svg
   }
 
-  initTree(data, dataOptions, layoutOptions) {
+  initTree(data) {
     // If id and parentId options are specified, or the path option, use d3.stratify
     // to convert tabular data to a hierarchy; otherwise we assume that the data is
     // specified as an object {children} with nested objects (a.k.a. the “flare.json”
     // format), and use d3.hierarchy.
-    this.ingestData(data, dataOptions)
-    this.layOutTree(layoutOptions)
+    this.ingestData(data)
+    this.layOutTree()
 
     return this.svg
   }
 
-  updateTree(newData, {
-    link, // given a node d, its link (if any)
-    linkTarget = "_blank", // the target attribute for links (if any)
-  } = {}) {
+  updateTree(newData) {
     if (!this.svg) {
       return this.initTree(newData)
     }
 
+    const {
+      label,
+      link,
+      linkTarget,
+    } = this.options
+    
     this.ingestData(newData)
+
+    const descendants = this.root.descendants();
+    const L = label == null ? null : descendants.map(d => label(d.data, d));
 
     this.svg.selectAll("path")
       .data(this.root.links())
@@ -154,7 +220,10 @@ class Chart {
     .join("a")
       .attr("xlink:href", link == null ? null : d => link(d.data, d))
       .attr("target", link == null ? null : linkTarget)
-      .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`);
+      .attr("transform", d => {
+        console.log(d)
+        return `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`
+      });
   }
 }
 

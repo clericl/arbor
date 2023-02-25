@@ -8,22 +8,23 @@ function Arbor() {
   const chartRef = useRef(null)
   const nodeRef = useRef(null)
   const dispatch = useDispatch()
-  const { trunk, branches } = useSelector((state) => state.words)
+  const { branches, trunk, trunkGenerated } = useSelector((state) => state.words)
 
   useEffect(() => {
-    dispatch(plantSeed('eng: blue'))
+    dispatch(plantSeed('eng: yellow'))
   }, [dispatch])
 
   useEffect(() => {
-    setData(trunk.concat(branches))
-  }, [trunk, branches])
+    if (trunkGenerated) {
+      setData(trunk.concat(branches))
+    }
+  }, [trunk, trunkGenerated, branches])
 
   useEffect(() => {
     if (chartRef.current) {
       if (chartRef.current.svg) {
-        console.log('here')
+        chartRef.current.updateTree(data)
       } else if (data.length) {
-        console.log(data)
         chartRef.current.initTree(data)
       }
     }
