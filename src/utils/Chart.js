@@ -134,6 +134,7 @@ class Chart {
       .attr("font-size", fontSize);
 
     svg.append("g")
+      .classed("paths", true)
       .attr("fill", "none")
       .attr("stroke", stroke)
       .attr("stroke-opacity", strokeOpacity)
@@ -143,14 +144,15 @@ class Chart {
       .selectAll("path")
       .data(this.root.links())
       .join("path")
-        .attr("d", d3.linkRadial()
-          .angle(d => d.x)
-          .radius(d => d.y));
+      .attr("d", d3.linkRadial()
+      .angle(d => d.x)
+      .radius(d => d.y));
 
     const node = svg.append("g")
-    .selectAll("a")
-    .data(this.root.descendants())
-    .join("a")
+      .classed("nodes", true)
+      .selectAll("a")
+      .data(this.root.descendants())
+      .join("a")
       .attr("xlink:href", link == null ? null : d => link(d.data, d))
       .attr("target", link == null ? null : linkTarget)
       .attr("transform", d => {
@@ -201,6 +203,8 @@ class Chart {
       label,
       link,
       linkTarget,
+      halo,
+      haloWidth,
     } = this.options
     
     this.ingestData(newData)
@@ -208,14 +212,16 @@ class Chart {
     const descendants = this.root.descendants();
     const L = label == null ? null : descendants.map(d => label(d.data, d));
 
-    this.svg.selectAll("path")
+    this.svg.select(".paths")
+      .selectAll("path")
       .data(this.root.links())
       .join("path")
         .attr("d", d3.linkRadial()
           .angle(d => d.x)
           .radius(d => d.y));
 
-    this.svg.selectAll("a")
+    this.svg.select(".nodes")
+    .selectAll("a")
     .data(this.root.descendants())
     .join("a")
       .attr("xlink:href", link == null ? null : d => link(d.data, d))
@@ -223,7 +229,16 @@ class Chart {
       .attr("transform", d => {
         console.log(d)
         return `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`
-      });
+      })
+      .append("text")
+      .attr("transform", d => `rotate(${d.x >= Math.PI ? 180 : 0})`)
+      .attr("dy", "0.32em")
+      .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
+      .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
+      .attr("paint-order", "stroke")
+      .attr("stroke", halo)
+      .attr("stroke-width", haloWidth)
+      .text((d, i) => L[i]);
   }
 }
 

@@ -12,6 +12,7 @@ function* fetchTree(seed) {
 
     return data
   } catch(e) {
+    console.error(e)
     yield put(fetchTreeFailed())
   }
 }
@@ -55,7 +56,8 @@ function* fetchChildren(nodeOrSource) {
 
     return data
   } catch (e) {
-    yield put(fetchChildrenFailed(e))
+    console.error(e)
+    yield put(fetchChildrenFailed())
   }
 }
 
