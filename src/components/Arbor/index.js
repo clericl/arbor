@@ -13,7 +13,7 @@ function Arbor() {
   const { branches, trunk, trunkGenerated } = useSelector((state) => state.words)
 
   useEffect(() => {
-    dispatch(plantSeed('eng: quarter'))
+    dispatch(plantSeed('eng: goose'))
   }, [dispatch])
 
   useEffect(() => {

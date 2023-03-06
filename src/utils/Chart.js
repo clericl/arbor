@@ -68,7 +68,6 @@ class Chart {
 
   ingestData(data) {
     const {
-      sort,
       tree,
       radius,
       separation,
@@ -85,7 +84,7 @@ class Chart {
       const root = d3.stratify().id(id).parentId(parentId)(data)
   
       // Sort the nodes.
-      if (sort != null) root.sort(sort);
+      root.sort()
   
       // Compute the layout.
       tree().size([2 * Math.PI, radius]).separation(separation)(root);
@@ -214,7 +213,7 @@ class Chart {
       
       this.svg.select(".nodes")
         .selectAll("a")
-        .data(this.root.descendants(), d => `${d.data.id}-${d.height}`)
+        .data(this.root.descendants(), d => `${d.data.source}-${d.height}`)
         .join(
           enter => enter.append("a")
             .attr("xlink:href", link == null ? null : d => link(d.data, d))
@@ -230,18 +229,18 @@ class Chart {
               .attr("stroke", halo)
               .attr("stroke-width", haloWidth)
               .attr("paint-order", "stroke")
-              .attr("text-anchor", d => (d.x < Math.PI) === !d.children ? "start" : "end")
+              .attr("text-anchor", d => ((d.x < Math.PI)) === !d.children ? "start" : "end")
               .attr("font-size", d => 10 + (d.height * 2.5))
               .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`)
               .call(select => select.append("text")
                 .classed("source", true)
                 .attr("font-size", "1em")
-                .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
+                .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))
                 .text(d => d.data.source.split(': ')[1]))
               .call(select => select.append("text")
                 .classed("lang", true)
                 .attr("y", "1.2em")
-                .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
+                .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))
                 .attr("font-size", "0.75em")
                 .text(d => {
                   const printLang = iso[d.data.source.split(': ')[0]]
@@ -252,21 +251,23 @@ class Chart {
               .duration(200)
               .ease(d3.easeQuadOut)
               .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`))
-            .call(update => update.selectAll("circle")
+            .call(update => update.select("circle")
               .transition(t)
               .attr("r", d => d.height + 5))
-            .select(".captions")
-              .call(select => select.transition(t)
-                .attr("text-anchor", d => (d.x < Math.PI) === !d.children ? "start" : "end"))
-                .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`)
-                .attr("dy", "0.32em")
-                .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
-                .attr("font-size", d => 10 + (d.height * 2.5)),
-              // .selectAll("text")
-              //   .call(select => select.transition(t)
+            .call(update => update.select(".captions")
+              .attr("text-anchor", d => ((d.x < Math.PI)) === !d.children ? "start" : "end")
+              .attr("font-size", d => 10 + (d.height * 2.5))
+              .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`))
+            .call(select => select.select(".source")
+              .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1)))
+            .call(select => select.select(".lang")
+              .attr("y", "1.2em")
+              .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))),
           exit => exit.call(exit => exit.transition(t)
             .attr("opacity", 0)
             .remove()))
+
+      console.log(newData)
     }
   }
 
