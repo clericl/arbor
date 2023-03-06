@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from "react-redux"
 import { plantSeed } from "../../redux/actions"
 import Chart from "../../utils/Chart"
 
+import './index.css'
+
 function Arbor() {
   const [data, setData] = useState([])
   const chartRef = useRef(null)
@@ -11,7 +13,7 @@ function Arbor() {
   const { branches, trunk, trunkGenerated } = useSelector((state) => state.words)
 
   useEffect(() => {
-    dispatch(plantSeed('eng: yellow'))
+    dispatch(plantSeed('eng: quarter'))
   }, [dispatch])
 
   useEffect(() => {
@@ -35,7 +37,7 @@ function Arbor() {
   }, [])
 
   return (
-    <div ref={nodeRef}></div>
+    <div className="arbor-chart" ref={nodeRef}></div>
   )
 }
 

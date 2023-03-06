@@ -1,7 +1,7 @@
 import BigQuery from '../../utils/BigQuery'
 import { all, call, put, takeLatest } from 'redux-saga/effects'
 import { fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchingTree, fetchParentsFailed, fetchParentsSucceeded, fetchTreeFailed, fetchTreeSucceeded, plantSeed, saveTreeFailed, saveTreeSucceeded, savingTree, seedFailed } from '../actions'
-import { branchesGenerated, trunkGenerated, updateBranches, updateTrunk } from '../reducers/words'
+import { addToBranches, branchesGenerated, trunkGenerated, updateBranches, updateTrunk } from '../reducers/words'
 
 function* fetchTree(seed) {
   yield put(fetchingTree())
@@ -88,20 +88,20 @@ function* extendBranch(node, ignore) {
 
   if (childrenData?.meta?.count) {
     for (const datum of childrenData.data) {
-      if (!ignore.find((oldNode) => {
+      if (!ignore.find((compNode) => {
         return (
-          oldNode.source === datum.source &&
-          oldNode.target === datum.target
+          compNode.source === datum.source &&
+          compNode.target === datum.target
           ) || (
-          oldNode.target === datum.source &&
-          oldNode.source === datum.target
+          compNode.target === datum.source &&
+          compNode.source === datum.target
         )
       })) {
+        yield put(addToBranches(datum))
+  
         branch = branch.concat([datum])
         const newBranch = yield call(extendBranch, datum, ignore)
         branch = branch.concat(newBranch)
-
-        yield put(updateBranches(branch))
       }
     }
   }

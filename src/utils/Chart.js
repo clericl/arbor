@@ -3,18 +3,18 @@
 // https://observablehq.com/@d3/radial-tree
 
 import * as d3 from 'd3'
+import iso from './iso.json'
 
 class Chart {
   constructor(mountEl, {
     tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
-    separation = tree === d3.tree ? (a, b) => (a.parent == b.parent ? 1 : 2) / a.depth : (a, b) => a.parent == b.parent ? 1 : 2,
-    label = d => d.source, // given a node d, returns the display name
+    separation = tree === d3.tree ? (a, b) => (a.parent === b.parent ? 1 : 2) / a.depth : (a, b) => a.parent === b.parent ? 1 : 2,
     title, // given a node d, returns its hover text
     link, // given a node d, its link (if any)
     linkTarget = "_blank", // the target attribute for links (if any)
-    width = 1640, // outer width, in pixels
-    height = 1400, // outer height, in pixels
-    margin = 60, // shorthand for margins
+    width = Math.min(window.innerWidth, window.innerHeight), // outer width, in pixels
+    height = width, // outer height, in pixels
+    margin = Math.min(width * 0.1, 60), // shorthand for margins
     marginTop = margin, // top margin, in pixels
     marginRight = margin, // right margin, in pixels
     marginBottom = margin, // bottom margin, in pixels
@@ -37,7 +37,6 @@ class Chart {
     this.options = {
       tree,
       separation,
-      label,
       title,
       link,
       linkTarget,
@@ -94,15 +93,15 @@ class Chart {
       this.root = root
     } catch (e) {
       console.warn(e)
+      return false
     }
 
     return this.root
   }
 
-  layOutTree() {
+  layOutTree(data) {
     const {
       radius,
-      label,
       marginLeft,
       marginTop,
       width,
@@ -113,17 +112,10 @@ class Chart {
       strokeLinecap,
       strokeLinejoin,
       strokeWidth,
-      link,
-      linkTarget,
       fill,
       title,
       r,
-      halo,
-      haloWidth,
     } = this.options
-
-    const descendants = this.root.descendants();
-    const L = label == null ? null : descendants.map(d => label(d.data, d));
 
     const svg = d3.create("svg")
       .attr("viewBox", [-marginLeft - radius, -marginTop - radius, width, height])
@@ -141,56 +133,27 @@ class Chart {
       .attr("stroke-linecap", strokeLinecap)
       .attr("stroke-linejoin", strokeLinejoin)
       .attr("stroke-width", strokeWidth)
-      .selectAll("path")
-      .data(this.root.links())
-      .join("path")
-      .attr("d", d3.linkRadial()
-      .angle(d => d.x)
-      .radius(d => d.y));
 
-    const node = svg.append("g")
+    const nodes = svg.append("g")
       .classed("nodes", true)
-      .selectAll("a")
-      .data(this.root.descendants())
-      .join("a")
-      .attr("xlink:href", link == null ? null : d => link(d.data, d))
-      .attr("target", link == null ? null : linkTarget)
-      .attr("transform", d => {
-        console.log(d)
-        return `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`
-      });
 
-    node.append("circle")
-      .attr("fill", d => d.children ? stroke : fill)
+    nodes.append("circle")
+      .attr("fill", fill ? fill : stroke)
       .attr("r", r);
 
-    if (title != null) node.append("title")
+    if (title != null) nodes.append("title")
       .text(d => title(d.data, d));
-
-    if (L) node.append("text")
-      .attr("transform", d => `rotate(${d.x >= Math.PI ? 180 : 0})`)
-      .attr("dy", "0.32em")
-      .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
-      .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
-      .attr("paint-order", "stroke")
-      .attr("stroke", halo)
-      .attr("stroke-width", haloWidth)
-      .text((d, i) => L[i]);
-
+      
     this.mountEl.appendChild(svg.node())
     this.svg = svg
+
+    this.updateTree(data)
 
     return this.svg
   }
 
   initTree(data) {
-    // If id and parentId options are specified, or the path option, use d3.stratify
-    // to convert tabular data to a hierarchy; otherwise we assume that the data is
-    // specified as an object {children} with nested objects (a.k.a. the “flare.json”
-    // format), and use d3.hierarchy.
-    this.ingestData(data)
-    this.layOutTree()
-
+    this.layOutTree(data)
     return this.svg
   }
 
@@ -198,47 +161,120 @@ class Chart {
     if (!this.svg) {
       return this.initTree(newData)
     }
-
+    
     const {
-      label,
       link,
       linkTarget,
       halo,
       haloWidth,
     } = this.options
     
-    this.ingestData(newData)
+    const dataIngested = this.ingestData(newData)
 
-    const descendants = this.root.descendants();
-    const L = label == null ? null : descendants.map(d => label(d.data, d));
+    if (dataIngested) {
+      const t = this.svg.transition()
+        .duration(300)
+        .ease(d3.easeQuadOut)
 
-    this.svg.select(".paths")
-      .selectAll("path")
-      .data(this.root.links())
-      .join("path")
-        .attr("d", d3.linkRadial()
-          .angle(d => d.x)
-          .radius(d => d.y));
+      let pathLength;
+      const pathTween = () => d3.interpolateNumber(pathLength, 0);
+  
+      this.svg.select(".paths")
+        .selectAll("path")
+        .data(this.root.links(), d => `${d.source.id}-${d.target.id}`)
+        .join(
+          enter => enter.append("path")
+            .attr("stroke", "none")
+            .attr("d", d3.linkRadial()
+              .angle(d => d.x)
+              .radius(d => d.y))
+            .attr("stroke-dasharray", function() {
+              return pathLength = this.getTotalLength()
+            })
+            .attr("stroke-dashoffset", 0)
+            .call(path => path.transition(t)
+              .attr("stroke", "black")
+              .attrTween("stroke-dashoffset", pathTween)
+            ),
+          update => update
+            .attr("stroke", "black")
+            .attr("stroke-dasharray", 0)
+            .attr("stroke-dashoffset", 0)
+            .call(path => path.transition(t)
+              .attr("d", d3.linkRadial()
+                .angle(d => d.x)
+                .radius(d => d.y))
+              ),
+          exit => exit
+            .call(exit => exit.transition(t)
+              .attr("opacity", 0)
+              .remove()
+            )
+        )
+      
+      this.svg.select(".nodes")
+        .selectAll("a")
+        .data(this.root.descendants(), d => `${d.data.id}-${d.height}`)
+        .join(
+          enter => enter.append("a")
+            .attr("xlink:href", link == null ? null : d => link(d.data, d))
+            .attr("target", link == null ? null : linkTarget)
+            .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
+            .attr("opacity", 0)
+            .call(select => select.append("circle")
+              .attr("r", d => d.height + 5))
+            .call(enter => enter.transition(t)
+              .attr("opacity", 1))
+            .append("g")
+              .classed("captions", true)
+              .attr("stroke", halo)
+              .attr("stroke-width", haloWidth)
+              .attr("paint-order", "stroke")
+              .attr("text-anchor", d => (d.x < Math.PI) === !d.children ? "start" : "end")
+              .attr("font-size", d => 10 + (d.height * 2.5))
+              .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`)
+              .call(select => select.append("text")
+                .classed("source", true)
+                .attr("font-size", "1em")
+                .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
+                .text(d => d.data.source.split(': ')[1]))
+              .call(select => select.append("text")
+                .classed("lang", true)
+                .attr("y", "1.2em")
+                .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
+                .attr("font-size", "0.75em")
+                .text(d => {
+                  const printLang = iso[d.data.source.split(': ')[0]]
+                  return printLang ? printLang : ''
+                })),
+          update => update
+            .call(update => update.transition()
+              .duration(200)
+              .ease(d3.easeQuadOut)
+              .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`))
+            .call(update => update.selectAll("circle")
+              .transition(t)
+              .attr("r", d => d.height + 5))
+            .select(".captions")
+              .call(select => select.transition(t)
+                .attr("text-anchor", d => (d.x < Math.PI) === !d.children ? "start" : "end"))
+                .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`)
+                .attr("dy", "0.32em")
+                .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
+                .attr("font-size", d => 10 + (d.height * 2.5)),
+              // .selectAll("text")
+              //   .call(select => select.transition(t)
+          exit => exit.call(exit => exit.transition(t)
+            .attr("opacity", 0)
+            .remove()))
+    }
+  }
 
-    this.svg.select(".nodes")
-    .selectAll("a")
-    .data(this.root.descendants())
-    .join("a")
-      .attr("xlink:href", link == null ? null : d => link(d.data, d))
-      .attr("target", link == null ? null : linkTarget)
-      .attr("transform", d => {
-        console.log(d)
-        return `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`
-      })
-      .append("text")
-      .attr("transform", d => `rotate(${d.x >= Math.PI ? 180 : 0})`)
-      .attr("dy", "0.32em")
-      .attr("x", d => d.x < Math.PI === !d.children ? 6 : -6)
-      .attr("text-anchor", d => d.x < Math.PI === !d.children ? "start" : "end")
-      .attr("paint-order", "stroke")
-      .attr("stroke", halo)
-      .attr("stroke-width", haloWidth)
-      .text((d, i) => L[i]);
+  destroy() {
+    if (this.svg) {
+      this.svg.remove()
+      this.svg = null
+    }
   }
 }
 
