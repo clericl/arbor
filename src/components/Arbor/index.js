@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { plantSeed } from "../../redux/actions"
-import { removeFromBranches } from "../../redux/reducers/words"
+import { ingestionFailed, plantSeed } from "../../redux/actions"
 import Chart from "../../utils/Chart"
 
 import './index.css'
@@ -27,12 +26,12 @@ function Arbor() {
   useEffect(() => {
     if (chartRef.current && chartInit) {
       if (chartRef.current.svg && data.length) {
-        const error = chartRef.current.ingestData(data)
+        const statusObj = chartRef.current.ingestData(data)
 
-        if (!error) {
+        if (!statusObj.hasError) {
           chartRef.current.updateTree()
         } else {
-          dispatch(removeFromBranches(error))
+          dispatch(ingestionFailed(statusObj))
         }
       }
     }

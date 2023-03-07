@@ -1,7 +1,8 @@
 import BigQuery from '../../utils/BigQuery'
 import { all, call, put, takeLatest } from 'redux-saga/effects'
-import { fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchingTree, fetchParentsFailed, fetchParentsSucceeded, fetchTreeFailed, fetchTreeSucceeded, plantSeed, saveTreeFailed, saveTreeSucceeded, savingTree, seedFailed } from '../actions'
-import { addToBranches, branchesGenerated, trunkGenerated, updateBranches, updateTrunk } from '../reducers/words'
+import { ingestionFailed, fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchingTree, fetchParentsFailed, fetchParentsSucceeded, fetchTreeFailed, fetchTreeSucceeded, plantSeed, saveTreeFailed, saveTreeSucceeded, savingTree, seedFailed } from '../actions'
+import { addToBranches, branchesGenerated, removeFromBranches, trunkGenerated, updateBranches, updateTrunk } from '../reducers/words'
+import { setError } from '../reducers/ui'
 
 function* fetchTree(seed) {
   yield put(fetchingTree())
@@ -141,7 +142,29 @@ function* buildTree(action) {
       // yield call(saveTree, action.payload, trunk, branches)
     } 
   } else {
-    yield put(seedFailed('No results found.'))
+    const errorObj = {
+      hasError: true,
+      type: 'notFound',
+      node: {
+        source: action.payload,
+      }
+    }
+    yield put(seedFailed(errorObj))
+  }
+}
+
+function* handleError(action) {
+  const errorObj = action.payload
+
+  switch (errorObj.type) {
+    case 'ambiguous':
+      yield put(removeFromBranches(errorObj.node))
+      break;
+    case 'notFound':
+      yield put(setError('No results in the etymology database...'))
+      break
+    default:
+      yield put(setError('An unknown error occurred!'))
   }
 }
 
@@ -149,9 +172,21 @@ function* watchPlantSeed() {
   yield takeLatest(plantSeed, buildTree)
 }
 
+function* watchingestionFailed() {
+  yield takeLatest([
+    ingestionFailed,
+    fetchTreeFailed,
+    saveTreeFailed,
+    fetchParentsFailed,
+    fetchChildrenFailed,
+    seedFailed,
+  ], handleError)
+}
+
 function* rootSaga() {
   yield all([
     watchPlantSeed(),
+    watchingestionFailed(),
   ])
 }
 

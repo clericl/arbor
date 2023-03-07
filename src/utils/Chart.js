@@ -92,10 +92,14 @@ class Chart {
       this.root = root
     } catch (e) {
       console.warn(e)
-      if (e.message.includes('ambiguous: ')) {
-        debugger
-        return e.message.split('ambiguous: ')[1]
+      const messageSplit = e.message.split(': ')
+      const errorObj = {
+        hasError: true,
+        type: messageSplit[0],
+        node: messageSplit[1]
       }
+
+      return errorObj
     }
 
     return false

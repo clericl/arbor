@@ -31,7 +31,7 @@ const treeSlice = createSlice({
       const targetNode = action.payload
       const targetIndex = state.branches.findIndex((compNode) => (
         targetNode.source === compNode.source &&
-        targetNode.rel === compNode.rel &&
+        targetNode.relation === compNode.relation &&
         targetNode.target === compNode.target
       ))
 

@@ -23,3 +23,5 @@ export const fetchChildrenFailed = createAction('arbor/fetchChildrenFailed')
 export const plantSeed = createAction('arbor/plantSeed')
 export const seedFailed = createAction('arbor/seedFailed')
 export const treeGenerated = createAction('arbor/treeGenerated')
+
+export const ingestionFailed = createAction('arbor/ingestionFailed')
