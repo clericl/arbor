@@ -135,8 +135,7 @@ function* buildTree(action) {
         const newBranch = yield call(extendBranch, node, trunk)
         branches = branches.concat(newBranch)
       }
-      
-      yield put(updateBranches(branches))
+
       yield put(branchesGenerated(branches))
   
       // yield call(saveTree, action.payload, trunk, branches)

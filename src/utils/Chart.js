@@ -92,13 +92,16 @@ class Chart {
       this.root = root
     } catch (e) {
       console.warn(e)
-      return false
+      if (e.message.includes('ambiguous: ')) {
+        debugger
+        return e.message.split('ambiguous: ')[1]
+      }
     }
 
-    return this.root
+    return false
   }
 
-  layOutTree(data) {
+  layOutTree() {
     const {
       radius,
       marginLeft,
@@ -112,7 +115,6 @@ class Chart {
       strokeLinejoin,
       strokeWidth,
       fill,
-      title,
       r,
     } = this.options
 
@@ -139,26 +141,20 @@ class Chart {
     nodes.append("circle")
       .attr("fill", fill ? fill : stroke)
       .attr("r", r);
-
-    if (title != null) nodes.append("title")
-      .text(d => title(d.data, d));
       
     this.mountEl.appendChild(svg.node())
     this.svg = svg
 
-    this.updateTree(data)
-
     return this.svg
   }
 
-  initTree(data) {
-    this.layOutTree(data)
-    return this.svg
+  initTree() {
+    return this.layOutTree()
   }
 
-  updateTree(newData) {
+  updateTree() {
     if (!this.svg) {
-      return this.initTree(newData)
+      return false
     }
     
     const {
@@ -167,111 +163,106 @@ class Chart {
       halo,
       haloWidth,
     } = this.options
-    
-    const dataIngested = this.ingestData(newData)
 
-    if (dataIngested) {
-      const t = this.svg.transition()
-        .duration(300)
-        .ease(d3.easeQuadOut)
+    const t = this.svg.transition()
+      .duration(300)
+      .ease(d3.easeQuadOut)
 
-      let pathLength;
-      const pathTween = () => d3.interpolateNumber(pathLength, 0);
-  
-      this.svg.select(".paths")
-        .selectAll("path")
-        .data(this.root.links(), d => `${d.source.id}-${d.target.id}`)
-        .join(
-          enter => enter.append("path")
-            .attr("stroke", "none")
+    let pathLength;
+    const pathTween = () => d3.interpolateNumber(pathLength, 0);
+
+    this.svg.select(".paths")
+      .selectAll("path")
+      .data(this.root.links(), d => `${d.source.id}-${d.target.id}`)
+      .join(
+        enter => enter.append("path")
+          .attr("stroke", "none")
+          .attr("d", d3.linkRadial()
+            .angle(d => d.x)
+            .radius(d => d.y))
+          .attr("stroke-dasharray", function() {
+            return pathLength = this.getTotalLength()
+          })
+          .attr("stroke-dashoffset", 0)
+          .call(path => path.transition(t)
+            .attr("stroke", "black")
+            .attrTween("stroke-dashoffset", pathTween)
+          ),
+        update => update
+          .attr("stroke", "black")
+          .attr("stroke-dasharray", 0)
+          .attr("stroke-dashoffset", 0)
+          .call(path => path.transition(t)
             .attr("d", d3.linkRadial()
               .angle(d => d.x)
               .radius(d => d.y))
-            .attr("stroke-dasharray", function() {
-              return pathLength = this.getTotalLength()
-            })
-            .attr("stroke-dashoffset", 0)
-            .call(path => path.transition(t)
-              .attr("stroke", "black")
-              .attrTween("stroke-dashoffset", pathTween)
             ),
-          update => update
-            .attr("stroke", "black")
-            .attr("stroke-dasharray", 0)
-            .attr("stroke-dashoffset", 0)
-            .call(path => path.transition(t)
-              .attr("d", d3.linkRadial()
-                .angle(d => d.x)
-                .radius(d => d.y))
-              ),
-          exit => exit
-            .call(exit => exit.transition(t)
-              .attr("opacity", 0)
-              .remove()
-            )
-        )
-      
-      this.svg.select(".nodes")
-        .selectAll("a")
-        .data(this.root.descendants(), d => `${d.data.source}-${d.height}`)
-        .join(
-          enter => enter.append("a")
-            .attr("xlink:href", link == null ? null : d => link(d.data, d))
-            .attr("target", link == null ? null : linkTarget)
-            .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
+        exit => exit
+          .call(exit => exit.transition(t)
             .attr("opacity", 0)
-            .call(select => select.append("circle")
-              .attr("r", d => d.height + 5))
-            .call(enter => enter.transition(t)
-              .attr("opacity", 1))
-            .append("g")
-              .classed("captions", true)
-              .attr("stroke", halo)
-              .attr("stroke-width", haloWidth)
-              .attr("paint-order", "stroke")
-              .attr("text-anchor", d => ((d.x < Math.PI)) === !d.children ? "start" : "end")
-              .attr("font-size", d => 10 + (d.height * 2.5))
-              .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`)
-              .call(select => select.append("text")
-                .classed("source", true)
-                .attr("font-size", "1em")
-                .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))
-                .text(d => d.data.source.split(': ')[1]))
-              .call(select => select.append("text")
-                .classed("lang", true)
-                .attr("y", "1.2em")
-                .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))
-                .attr("font-size", "0.75em")
-                .text(d => {
-                  const printLang = iso[d.data.source.split(': ')[0]]
-                  return printLang ? printLang : ''
-                })),
-          update => update
-            .call(update => update.transition()
-              .duration(200)
-              .ease(d3.easeQuadOut)
-              .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`))
-            .call(update => update.select("circle")
-              .transition(t)
-              .attr("r", d => d.height + 5))
-            .call(update => update.select(".captions")
-              .attr("text-anchor", d => ((d.x < Math.PI)) === !d.children ? "start" : "end")
-              .attr("font-size", d => 10 + (d.height * 2.5))
-              .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`))
-            .call(select => select.select(".source")
-              .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1)))
-            .call(select => select.select(".lang")
+            .remove()
+          )
+      )
+    
+    this.svg.select(".nodes")
+      .selectAll("a")
+      .data(this.root.descendants(), d => `${d.data.source}-${d.height}`)
+      .join(
+        enter => enter.append("a")
+          .attr("xlink:href", link == null ? null : d => link(d.data, d))
+          .attr("target", link == null ? null : linkTarget)
+          .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
+          .attr("opacity", 0)
+          .call(select => select.append("circle")
+            .attr("r", d => d.height + 2))
+          .call(enter => enter.transition(t)
+            .attr("opacity", 1))
+          .append("g")
+            .classed("captions", true)
+            .attr("stroke", halo)
+            .attr("stroke-width", haloWidth)
+            .attr("paint-order", "stroke")
+            .attr("text-anchor", d => ((d.x < Math.PI)) === !d.children ? "start" : "end")
+            .attr("font-size", d => 10 + (d.height * 2.5))
+            .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`)
+            .call(select => select.append("text")
+              .classed("source", true)
+              .attr("font-size", "1em")
+              .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))
+              .text(d => d.data.source.split(': ')[1]))
+            .call(select => select.append("text")
+              .classed("lang", true)
               .attr("y", "1.2em")
-              .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))),
-          exit => exit.call(exit => exit.transition(t)
-            .attr("opacity", 0)
-            .remove()))
-
-      console.log(newData)
-    }
+              .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))
+              .attr("font-size", "0.75em")
+              .text(d => {
+                const printLang = iso[d.data.source.split(': ')[0]]
+                return printLang ? printLang : ''
+              })),
+        update => update
+          .call(update => update.transition(t)
+            .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`))
+          .call(update => update.select("circle")
+            .transition(t)
+            .attr("r", d => d.height + 2))
+          .call(update => update.select(".captions")
+            .transition(t)
+            .attr("text-anchor", d => ((d.x < Math.PI)) === !d.children ? "start" : "end")
+            .attr("font-size", d => 10 + (d.height * 2.5))
+            .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`))
+          .call(select => select.select(".source")
+            .transition(t)
+            .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1)))
+          .call(select => select.select(".lang")
+            .transition(t)
+            .attr("y", "1.2em")
+            .attr("x", d => (d.height + 6) * ((d.x < Math.PI) === !d.children ? 1 : -1))),
+        exit => exit.call(exit => exit.transition(t)
+          .attr("opacity", 0)
+          .remove()))
   }
 
-  destroy() {
+  destroyTree() {
     if (this.svg) {
       this.svg.remove()
       this.svg = null

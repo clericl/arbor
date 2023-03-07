@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { plantSeed } from "../../redux/actions"
+import { removeFromBranches } from "../../redux/reducers/words"
 import Chart from "../../utils/Chart"
 
 import './index.css'
 
 function Arbor() {
+  const [chartInit, setChartInit] = useState(false)
   const [data, setData] = useState([])
   const chartRef = useRef(null)
   const nodeRef = useRef(null)
@@ -13,7 +15,7 @@ function Arbor() {
   const { branches, trunk, trunkGenerated } = useSelector((state) => state.words)
 
   useEffect(() => {
-    dispatch(plantSeed('eng: goose'))
+    dispatch(plantSeed('eng: dime'))
   }, [dispatch])
 
   useEffect(() => {
@@ -23,17 +25,28 @@ function Arbor() {
   }, [trunk, trunkGenerated, branches])
 
   useEffect(() => {
-    if (chartRef.current) {
-      if (chartRef.current.svg) {
-        chartRef.current.updateTree(data)
-      } else if (data.length) {
-        chartRef.current.initTree(data)
+    if (chartRef.current && chartInit) {
+      if (chartRef.current.svg && data.length) {
+        const error = chartRef.current.ingestData(data)
+
+        if (!error) {
+          chartRef.current.updateTree()
+        } else {
+          dispatch(removeFromBranches(error))
+        }
       }
     }
-  }, [data])
+  }, [chartInit, data, dispatch])
 
   useEffect(() => {
     chartRef.current = new Chart(nodeRef.current)
+    chartRef.current.initTree()
+      
+    setChartInit(true)
+
+    return () => {
+      chartRef.current.destroyTree()
+    }
   }, [])
 
   return (

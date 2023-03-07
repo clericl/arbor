@@ -15,7 +15,7 @@ const store = configureStore({
   reducer: {
     words,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware)
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware).concat(logger)
 })
 
 sagaMiddleware.run(saga)

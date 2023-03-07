@@ -11,17 +11,34 @@ const treeSlice = createSlice({
   reducers: {
     addToBranches(state, action) {
       const datum = action.payload
-      if (!state.branches.find((compNode) => {
+      if (!state.branches.concat(state.trunk).find((compNode) => {
         return (
           compNode.source === datum.source &&
           compNode.target === datum.target
           ) || (
           compNode.target === datum.source &&
           compNode.source === datum.target
+        ) || (
+          compNode.source === datum.source &&
+          compNode.target !== datum.target &&
+          compNode.relation === 'rel:etymology'
         )
       })) {
         state.branches.push(datum)
       }
+    },
+    removeFromBranches(state, action) {
+      const targetNode = action.payload
+      const targetIndex = state.branches.findIndex((compNode) => (
+        targetNode.source === compNode.source &&
+        targetNode.rel === compNode.rel &&
+        targetNode.target === compNode.target
+      ))
+
+      const newBranches = state.branches.slice()
+      newBranches.splice(targetIndex, 1)
+
+      state.branches = newBranches
     },
     updateTrunk(state, action) {
       state.trunk = action.payload
@@ -47,6 +64,7 @@ export const {
   branchesGenerated,
   updateBranches,
   updateTrunk,
+  removeFromBranches,
   resetTree,
   trunkGenerated,
 } = treeSlice.actions
