@@ -14,10 +14,6 @@ function Arbor() {
   const { branches, trunk, trunkGenerated } = useSelector((state) => state.words)
 
   useEffect(() => {
-    dispatch(plantSeed('eng: dime'))
-  }, [dispatch])
-
-  useEffect(() => {
     if (trunkGenerated) {
       setData(trunk.concat(branches))
     }

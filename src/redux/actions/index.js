@@ -25,3 +25,4 @@ export const seedFailed = createAction('arbor/seedFailed')
 export const treeGenerated = createAction('arbor/treeGenerated')
 
 export const ingestionFailed = createAction('arbor/ingestionFailed')
+export const cancelSeed = createAction('arbor/cancelSeed')

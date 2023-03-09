@@ -1,8 +1,8 @@
 import BigQuery from '../../utils/BigQuery'
-import { all, call, put, takeLatest } from 'redux-saga/effects'
-import { ingestionFailed, fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchingTree, fetchParentsFailed, fetchParentsSucceeded, fetchTreeFailed, fetchTreeSucceeded, plantSeed, saveTreeFailed, saveTreeSucceeded, savingTree, seedFailed } from '../actions'
+import { all, call, cancel, put, take, takeLatest } from 'redux-saga/effects'
+import { ingestionFailed, fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchingTree, fetchParentsFailed, fetchParentsSucceeded, fetchTreeFailed, fetchTreeSucceeded, plantSeed, saveTreeFailed, saveTreeSucceeded, savingTree, seedFailed, cancelSeed } from '../actions'
 import { addToBranches, branchesGenerated, removeFromBranches, trunkGenerated, updateBranches, updateTrunk } from '../reducers/words'
-import { setError } from '../reducers/ui'
+import { finishLoading, setError, startLoading } from '../reducers/ui'
 
 function* fetchTree(seed) {
   yield put(fetchingTree())
@@ -42,7 +42,13 @@ function* fetchParents(nodeOrSource) {
 
     return data
   } catch (e) {
-    yield put(fetchParentsFailed(e))
+    console.warn(e)
+    const errorObj = {
+      hasError: true,
+      type: 'fetchParentsFailed',
+      node: nodeOrSource,
+    }
+    yield put(fetchParentsFailed(errorObj))
   }
 }
 
@@ -58,7 +64,12 @@ function* fetchChildren(nodeOrSource) {
     return data
   } catch (e) {
     console.error(e)
-    yield put(fetchChildrenFailed())
+    const errorObj = {
+      hasError: true,
+      type: 'fetchChildrenFailed',
+      node: nodeOrSource
+    }
+    yield put(fetchChildrenFailed(errorObj))
   }
 }
 
@@ -113,6 +124,8 @@ function* extendBranch(node, ignore) {
 function* buildTree(action) {
   if (!action.payload) return false
 
+  yield put(startLoading())
+
   const seedNodeData = yield call(fetchParents, action.payload)
   if (seedNodeData.meta.count) {
     const seedNode = seedNodeData.data[0]
@@ -140,6 +153,8 @@ function* buildTree(action) {
       yield put(branchesGenerated(branches))
   
       // yield call(saveTree, action.payload, trunk, branches)
+
+      yield put(finishLoading())
     } 
   } else {
     const errorObj = {
@@ -163,16 +178,21 @@ function* handleError(action) {
     case 'notFound':
       yield put(setError('No results in the etymology database...'))
       break
+    case 'fetchChildrenFailed':
+      yield put(setError(`Could not fetch child: ${JSON.stringify(errorObj.node)}`))
+      break;
     default:
       yield put(setError('An unknown error occurred!'))
   }
 }
 
 function* watchPlantSeed() {
-  yield takeLatest(plantSeed, buildTree)
+  const task = yield takeLatest(plantSeed, buildTree)
+  yield take(cancelSeed)
+  yield cancel(task)
 }
 
-function* watchingestionFailed() {
+function* watchHandleError() {
   yield takeLatest([
     ingestionFailed,
     fetchTreeFailed,
@@ -186,7 +206,7 @@ function* watchingestionFailed() {
 function* rootSaga() {
   yield all([
     watchPlantSeed(),
-    watchingestionFailed(),
+    watchHandleError(),
   ])
 }
 

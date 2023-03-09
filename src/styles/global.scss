@@ -1,0 +1,6 @@
+@use './constants.scss' as *;
+
+html, body {
+  font-family: $typeface-primary;
+  color: $color-black;
+}

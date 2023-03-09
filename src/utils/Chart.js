@@ -139,12 +139,8 @@ class Chart {
       .attr("stroke-linejoin", strokeLinejoin)
       .attr("stroke-width", strokeWidth)
 
-    const nodes = svg.append("g")
+    svg.append("g")
       .classed("nodes", true)
-
-    nodes.append("circle")
-      .attr("fill", fill ? fill : stroke)
-      .attr("r", r);
       
     this.mountEl.appendChild(svg.node())
     this.svg = svg

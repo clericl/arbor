@@ -1,0 +1,21 @@
+@use '../../styles/constants.scss' as *;
+
+.layout {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  
+  .workspace {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    height: 100%;
+    flex: 1;
+  }
+  
+  .chart-wrapper {
+    position: relative;
+    flex: 1;
+  }
+}
+

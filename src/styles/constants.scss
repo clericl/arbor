@@ -1,0 +1,12 @@
+$typeface-primary: 'EB Garamond', serif;
+$typeface-secondary: 'Libre Franklin', sans-serif;
+
+$color-black: #161616;
+$color-green: #4e6b4c;
+
+@mixin flex($direction: row, $justify: center, $align: center) {
+  display: flex;
+  justify-content: $justify;
+  align-items: $align;
+  flex-direction: $direction;
+}

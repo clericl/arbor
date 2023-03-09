@@ -1,0 +1,20 @@
+@use '../../styles/constants.scss' as *;
+
+.input-form {
+  width: 100%;
+  background-color: #ececec;
+  border-top: 1px solid $color-green;
+  
+   .input {
+    width: 100%;
+    margin: 0;
+    box-sizing: border-box;
+    border: none;
+    padding: 1.5rem 1rem;
+    background-color: transparent;
+    font-family: 'EB Garamond', serif;
+    font-size: 1.5rem;
+    text-align: center;
+  }
+}
+
