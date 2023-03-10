@@ -1,17 +1,19 @@
+import classNames from "classnames"
 import { useSelector } from "react-redux"
 
+import './index.scss'
+
 function Loading() {
-  const { loading } = useSelector((state) => state.ui)
-  const { error } = useSelector((state) => state.words)
+  const { seed } = useSelector((state) => state.words)
+  const { error, loading } = useSelector((state) => state.ui)
 
   return (
-    loading ? (
-      <div>Loading...</div>
-    ) : error ? (
-      <div>{error}</div>
-    ) : (
-      null
-    )
+    <div className={classNames('status', { error })}>
+      {loading ? 'Building tree...'
+        : error ? error
+        : seed ? `Done building tree for "${seed}".`
+        : 'Ready.'}
+    </div>
   )
 }
 

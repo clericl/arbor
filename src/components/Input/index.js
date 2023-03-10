@@ -1,14 +1,20 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { plantSeed } from "../../redux/actions"
 
+import iso from '../../utils/iso.json'
 import './index.scss'
 
 function Input() {
+  const [lang, setLang] = useState('eng')
   const [value, setValue] = useState('')
   const { loading } = useSelector((state) => state.ui)
   const dispatch = useDispatch()
   const ref = useRef()
+
+  const handleChange = (e) => {
+    setLang(e.target.value)
+  }
 
   const handleInput = (e) => {
     setValue(e.target.value)
@@ -17,15 +23,17 @@ function Input() {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    dispatch(plantSeed(`eng: ${value}`))
+    dispatch(plantSeed(`${lang}: ${value}`))
     ref.current.blur()
   }
 
+  const renderLangOptions = useCallback(() => Object.entries(iso).sort((a, b) => a[1] > b[1]).map(([key, value]) => (
+    <option className="lang-option" key={key} value={key}>{value}</option>
+  )), [])
+
   useEffect(() => {
-    if (!loading) {
-      ref.current.focus()
-    }
-  }, [loading])
+    ref.current.focus()
+  }, [])
 
   return (
     <form className="input-form" onSubmit={handleSubmit}>
@@ -37,6 +45,9 @@ function Input() {
         value={value}
         ref={ref}
       />
+      <select className="lang-select" value={lang} onChange={handleChange}>
+        {renderLangOptions()}
+      </select>
     </form>
   )
 }

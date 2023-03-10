@@ -17,7 +17,7 @@ const store = configureStore({
     words,
     ui,
   },
-  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware).concat(logger)
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware)
 })
 
 sagaMiddleware.run(saga)

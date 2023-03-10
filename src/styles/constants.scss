@@ -1,8 +1,13 @@
 $typeface-primary: 'EB Garamond', serif;
 $typeface-secondary: 'Libre Franklin', sans-serif;
 
-$color-black: #161616;
-$color-green: #4e6b4c;
+$color-primary: #596869;
+$color-secondary: #515751;
+$color-highlight: #f5f9e9;
+$color-background: #495B4B;
+$color-accent: #c2c1a5;
+$color-error: #8a2121;
+$color-white: white;
 
 @mixin flex($direction: row, $justify: center, $align: center) {
   display: flex;

@@ -1,8 +1,8 @@
 import BigQuery from '../../utils/BigQuery'
-import { all, call, cancel, put, take, takeLatest } from 'redux-saga/effects'
+import { all, call, cancel, delay, put, take, takeLatest } from 'redux-saga/effects'
 import { ingestionFailed, fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchingTree, fetchParentsFailed, fetchParentsSucceeded, fetchTreeFailed, fetchTreeSucceeded, plantSeed, saveTreeFailed, saveTreeSucceeded, savingTree, seedFailed, cancelSeed } from '../actions'
-import { addToBranches, branchesGenerated, removeFromBranches, trunkGenerated, updateBranches, updateTrunk } from '../reducers/words'
-import { finishLoading, setError, startLoading } from '../reducers/ui'
+import { addToBranches, branchesGenerated, removeFromBranches, resetTree, setSeed, trunkGenerated, updateBranches, updateTrunk } from '../reducers/words'
+import { clearError, finishLoading, setError, startLoading } from '../reducers/ui'
 
 function* fetchTree(seed) {
   yield put(fetchingTree())
@@ -124,6 +124,12 @@ function* extendBranch(node, ignore) {
 function* buildTree(action) {
   if (!action.payload) return false
 
+  yield put(resetTree())
+  yield put(clearError())
+
+  yield delay(500)
+
+  yield put(setSeed(action.payload))
   yield put(startLoading())
 
   const seedNodeData = yield call(fetchParents, action.payload)
@@ -153,8 +159,6 @@ function* buildTree(action) {
       yield put(branchesGenerated(branches))
   
       // yield call(saveTree, action.payload, trunk, branches)
-
-      yield put(finishLoading())
     } 
   } else {
     const errorObj = {
@@ -166,6 +170,8 @@ function* buildTree(action) {
     }
     yield put(seedFailed(errorObj))
   }
+
+  yield put(finishLoading())
 }
 
 function* handleError(action) {
@@ -176,10 +182,10 @@ function* handleError(action) {
       yield put(removeFromBranches(errorObj.node))
       break;
     case 'notFound':
-      yield put(setError('No results in the etymology database...'))
+      yield put(setError('Could not find this word in the etymology database!'))
       break
     case 'fetchChildrenFailed':
-      yield put(setError(`Could not fetch child: ${JSON.stringify(errorObj.node)}`))
+      yield put(setError(`Could not fetch related words for: ${JSON.stringify(errorObj.node)}.`))
       break;
     default:
       yield put(setError('An unknown error occurred!'))

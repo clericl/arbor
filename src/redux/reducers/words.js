@@ -3,12 +3,16 @@ import { createSlice } from "@reduxjs/toolkit";
 const treeSlice = createSlice({
   name: 'tree',
   initialState: {
+    seed: null,
     trunk: [],
     branches: [],
     trunkGenerated: false,
     branchesGenerated: false,
   },
   reducers: {
+    setSeed(state, action) {
+      state.seed = action.payload
+    },
     addToBranches(state, action) {
       const datum = action.payload
       if (!state.branches.concat(state.trunk).find((compNode) => {
@@ -47,6 +51,7 @@ const treeSlice = createSlice({
       state.branches = action.payload
     },
     resetTree(state) {
+      state.seed = null
       state.trunk = []
       state.branches = []
     },
@@ -60,6 +65,7 @@ const treeSlice = createSlice({
 })
 
 export const {
+  setSeed,
   addToBranches,
   branchesGenerated,
   updateBranches,

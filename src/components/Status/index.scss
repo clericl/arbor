@@ -1,0 +1,13 @@
+@use '../../styles/constants.scss' as *;
+
+.status {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 0.25rem 0.5rem;
+  color: $color-background;
+
+  &.error {
+    color: $color-error;
+  }
+}

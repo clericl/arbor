@@ -2,19 +2,46 @@
 
 .input-form {
   width: 100%;
-  background-color: #ececec;
-  border-top: 1px solid $color-green;
+  background-color: transparent;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
   
-   .input {
-    width: 100%;
-    margin: 0;
+  .input {
+    border: 1px solid $color-background;
+    border-left: none;
+    border-bottom: none;
+    width: calc(100% - 1px);
     box-sizing: border-box;
-    border: none;
-    padding: 1.5rem 1rem;
-    background-color: transparent;
+    padding: 0.5rem 1rem;
+    background-color: white;
     font-family: 'EB Garamond', serif;
     font-size: 1.5rem;
     text-align: center;
+    outline: none;
+    color: $color-background;
+
+    &::placeholder {
+      color: $color-background;
+    }
+  }
+
+  .lang-select {
+    position: absolute;
+    right: 1rem;
+    top: 0;
+    transform: translateY(calc(-100% - 0.25rem));
+    width: 75px;
+    background-color: transparent;
+    border: none;
+    border-radius: 5px;
+    font-family: $typeface-primary;
+    font-size: 1rem;
+    color: $color-background;
+  }
+
+  .lang-option {
+    background-color: transparent;
   }
 }
 
