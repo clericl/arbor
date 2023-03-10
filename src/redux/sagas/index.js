@@ -124,13 +124,13 @@ function* extendBranch(node, ignore) {
 function* buildTree(action) {
   if (!action.payload) return false
 
+  yield put(startLoading())
   yield put(resetTree())
   yield put(clearError())
 
   yield delay(500)
 
   yield put(setSeed(action.payload))
-  yield put(startLoading())
 
   const seedNodeData = yield call(fetchParents, action.payload)
   if (seedNodeData.meta.count) {

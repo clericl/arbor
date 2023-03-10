@@ -6,12 +6,14 @@
   overflow: visible;
   position: relative;
   z-index: 1;
+  border: 1px solid $color-background;
+  border-left: none;
+  border-bottom: none;
+  box-sizing: border-box;
   
   .input {
-    border: 1px solid $color-background;
-    border-left: none;
-    border-bottom: none;
-    width: calc(100% - 1px);
+    border: none;
+    width: 100%;
     box-sizing: border-box;
     padding: 0.5rem 1rem;
     background-color: white;
@@ -20,9 +22,14 @@
     text-align: center;
     outline: none;
     color: $color-background;
+    transition: opacity 200ms ease-out;
 
     &::placeholder {
       color: $color-background;
+    }
+
+    &:disabled {
+      opacity: 0.5;
     }
   }
 

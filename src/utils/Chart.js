@@ -130,6 +130,7 @@ class Chart {
     const g = svg.append("g")
       .attr("id", "transform")
       .attr("font-size", fontSize)
+      .attr("font-family", "'Assistant', sans-serif")
 
     g.append("g")
       .classed("paths", true)
@@ -150,10 +151,10 @@ class Chart {
 
     function zoomed({ transform }) {
       g.attr("transform", transform)
-        .attr("font-size", fontSize / transform.k)
+        .attr("font-size", (fontSize / transform.k) + transform.k)
       
       svg.selectAll("g.captions")
-        .attr("stroke-width", strokeWidth / transform.k)
+        .attr("stroke-width", (strokeWidth / transform.k) + transform.k)
     }
       
     this.mountEl.appendChild(svg.node())
