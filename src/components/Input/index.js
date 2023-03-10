@@ -27,7 +27,7 @@ function Input() {
     ref.current.blur()
   }
 
-  const renderLangOptions = useCallback(() => Object.entries(iso).sort((a, b) => a[1] > b[1]).map(([key, value]) => (
+  const renderLangOptions = useCallback(() => Object.entries(iso).sort((a, b) => a[1] > b[1] ? 1 : -1).map(([key, value]) => (
     <option className="lang-option" key={key} value={key}>{value}</option>
   )), [])
 
