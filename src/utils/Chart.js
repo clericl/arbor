@@ -1,3 +1,4 @@
+// Based on Mike Bostock's "Tree, Radial Tidy", acknowledgements:
 // Copyright 2022 Observable, Inc.
 // Released under the ISC license.
 // https://observablehq.com/@d3/radial-tree

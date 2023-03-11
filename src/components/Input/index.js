@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux"
 import { plantSeed } from "../../redux/actions"
 
 import iso from '../../utils/iso.json'
+import Wiktionary from "../../utils/Wiktionary"
 import './index.scss'
 
 function Input() {
@@ -33,6 +34,14 @@ function Input() {
 
   useEffect(() => {
     ref.current.focus()
+
+    const runTest = async () => {
+      const parser = new Wiktionary()
+      const result = await parser.query('cheese')
+      console.log(result)
+    }
+
+    runTest()
   }, [])
 
   return (
