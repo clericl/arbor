@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { ingestionFailed } from "../../redux/actions"
+import { setWord } from "../../redux/reducers/words"
 import Chart from "../../utils/Chart"
 
 import './index.scss'
@@ -8,11 +9,17 @@ import './index.scss'
 function Arbor() {
   const [chartInit, setChartInit] = useState(false)
   const [data, setData] = useState([])
-  const { seed } = useSelector((state) => state.words)
+
+  const { branches, seed, trunk, trunkGenerated } = useSelector((state) => state.tree)
+
   const chartRef = useRef(null)
   const nodeRef = useRef(null)
+
   const dispatch = useDispatch()
-  const { branches, trunk, trunkGenerated } = useSelector((state) => state.words)
+
+  const handleSelectNode = useCallback((_, datum) => {
+    dispatch(setWord(datum?.data?.source))
+  }, [dispatch])
 
   useEffect(() => {
     if (trunkGenerated) {
@@ -36,14 +43,14 @@ function Arbor() {
 
   useEffect(() => {
     if (seed) {
-      chartRef.current = new Chart(nodeRef.current)
+      chartRef.current = new Chart(nodeRef.current, handleSelectNode)
       chartRef.current.initTree()
         
       setChartInit(true)
     } else {
       if (chartRef.current) {
         chartRef.current.destroyTree()
-        // chartRef.current = null
+        chartRef.current = null
       }
     }
 
@@ -52,7 +59,7 @@ function Arbor() {
         chartRef.current.destroyTree()
       }
     }
-  }, [seed])
+  }, [handleSelectNode, seed])
 
   return (
     <div className="arbor-chart" ref={nodeRef}></div>

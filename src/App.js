@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit'
 import createSagaMiddleware from 'redux-saga'
 import logger from 'redux-logger'
-import words from './redux/reducers/words'
+import tree from './redux/reducers/tree'
 import ui from './redux/reducers/ui'
 import saga from './redux/sagas'
 
@@ -14,7 +14,7 @@ const sagaMiddleware = createSagaMiddleware()
 
 const store = configureStore({
   reducer: {
-    words,
+    tree,
     ui,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware().concat(sagaMiddleware)

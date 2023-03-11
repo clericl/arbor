@@ -4,7 +4,7 @@ import { useSelector } from "react-redux"
 import './index.scss'
 
 function Loading() {
-  const { seed } = useSelector((state) => state.words)
+  const { seed } = useSelector((state) => state.tree)
   const { error, loading } = useSelector((state) => state.ui)
 
   return (

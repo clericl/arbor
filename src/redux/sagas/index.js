@@ -1,7 +1,7 @@
 import BigQuery from '../../utils/BigQuery'
 import { all, call, cancel, delay, put, take, takeLatest } from 'redux-saga/effects'
 import { ingestionFailed, fetchChildrenFailed, fetchChildrenSucceeded, fetchingChildren, fetchingParents, fetchingTree, fetchParentsFailed, fetchParentsSucceeded, fetchTreeFailed, fetchTreeSucceeded, plantSeed, saveTreeFailed, saveTreeSucceeded, savingTree, seedFailed, cancelSeed } from '../actions'
-import { addToBranches, branchesGenerated, removeFromBranches, resetTree, setSeed, trunkGenerated, updateBranches, updateTrunk } from '../reducers/words'
+import { addToBranches, branchesGenerated, removeFromBranches, resetTree, setSeed, trunkGenerated, updateBranches, updateTrunk } from '../reducers/tree'
 import { clearError, finishLoading, setError, startLoading } from '../reducers/ui'
 
 function* fetchTree(seed) {

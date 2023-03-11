@@ -7,7 +7,7 @@ import * as d3 from 'd3'
 import iso from './iso.json'
 
 class Chart {
-  constructor(mountEl, {
+  constructor(mountEl, selectNode, {
     tree = d3.tree, // layout algorithm (typically d3.tree or d3.cluster)
     separation = tree === d3.tree ? (a, b) => (a.parent === b.parent ? 1 : 2) / a.depth : (a, b) => a.parent === b.parent ? 1 : 2,
     title, // given a node d, returns its hover text
@@ -35,6 +35,7 @@ class Chart {
     fontSize = 12,
   } = {}) {
     this.mountEl = mountEl
+    this.selectNode = selectNode
     this.options = {
       tree,
       separation,
@@ -65,6 +66,10 @@ class Chart {
 
     this.root = null
     this.svg = null
+  }
+
+  initTree() {
+    return this.layOutTree()
   }
 
   ingestData(data) {
@@ -164,10 +169,6 @@ class Chart {
     return this.svg
   }
 
-  initTree() {
-    return this.layOutTree()
-  }
-
   updateTree() {
     if (!this.svg) {
       return false
@@ -219,6 +220,10 @@ class Chart {
             .remove()
           )
       )
+
+    const setActiveNode = (node, datum) => {
+      this.selectNode(node, datum)
+    }
     
     this.svg.select(".nodes")
       .selectAll("a")
@@ -229,6 +234,28 @@ class Chart {
           .attr("target", link == null ? null : linkTarget)
           .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
           .attr("opacity", 0)
+          .on("click", function(_, d) {
+            setActiveNode(this, d)
+          })
+          .on("mouseover", function(_, d) {
+            console.log(d)
+            d3.select(this)
+              .transition()
+              .duration(100)
+              .ease(d3.easeQuadOut)
+              .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0) scale(1.5)`)
+              .select("g.captions")
+                .attr("transform", `rotate(${90 - (180 * d.x / Math.PI)})`)
+          })
+          .on("mouseleave", function(_, d) {
+            d3.select(this)
+              .transition()
+              .duration(100)
+              .ease(d3.easeQuadOut)
+              .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
+              .select("g.captions")
+                .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`)
+          })
           .call(select => select.append("circle")
             .attr("r", d => d.height + 2))
             .attr("fill", "white")
@@ -292,6 +319,10 @@ class Chart {
         .attr('opacity', 0)
         .remove()
     }
+  }
+
+  setActiveNode(node) {
+    this.activeNode = node
   }
 }
 

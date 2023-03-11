@@ -22,7 +22,7 @@
     text-align: center;
     outline: none;
     color: $color-background;
-    transition: opacity 200ms ease-out;
+    transition: all 200ms ease-out;
 
     &::placeholder {
       color: $color-background;
@@ -30,6 +30,7 @@
 
     &:disabled {
       opacity: 0.5;
+      background-color: lightgray;
     }
   }
 
