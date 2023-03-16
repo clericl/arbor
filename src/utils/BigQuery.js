@@ -1,18 +1,18 @@
 class BigQuery {
-  static async fetchTree(seed){
-    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/trees/' + seed)
+  static async fetchNetwork(source){
+    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/networks/' + source)
     const body = await res.json()
     return body
   }
 
-  static async saveTree(tree){
-    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/trees', {
+  static async saveNetwork(network){
+    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/networks', {
       method: 'POST',
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(tree),
+      body: JSON.stringify(network),
     })
 
     const body = await res.json()
@@ -20,7 +20,7 @@ class BigQuery {
   }
 
   static async fetchRelations(seed) {
-    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/relation/' + seed)
+    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/relations/' + seed)
     const body = await res.json()
     return body
   }
@@ -31,8 +31,8 @@ class BigQuery {
     return body
   }
 
-  static async fetchChildren(seed) {
-    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/children/' + seed)
+  static async fetchDescendants(seed) {
+    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/descendants/' + seed)
     const body = await res.json()
     return body
   }

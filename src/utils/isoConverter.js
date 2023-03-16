@@ -3,7 +3,7 @@ const path = require('path')
 
 async function init() {
   const d3 = await import('d3')
-  const filePath = path.join(__dirname, '../assets/iso.tsv')
+  const filePath = path.join(__dirname, './iso.tsv')
 
   const data = await fs.readFile(filePath, { encoding: 'utf-8', })
 
@@ -11,7 +11,10 @@ async function init() {
 
   const isoTable = {}
   parsed.forEach((item) => {
-    isoTable[item.Id] = item['Print_Name']
+    isoTable[item['Ref_Name'].split(' (')[0]] = {
+      alpha2: item['Part1'],
+      alpha3: item['Id']
+    }
   })
 
   const formatted = JSON.stringify(isoTable, null, 2)

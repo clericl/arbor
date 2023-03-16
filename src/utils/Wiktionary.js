@@ -1,110 +1,163 @@
-// Based on PalmerAL's "wiktionary-parser", acknowledgements:
-// Copyright 2015 PalmerAL.
-// https://github.com/PalmerAL/wiktionary-parser
+import iso639_1 from '../utils/iso639-1.json'
+import iso639_3 from '../utils/iso639-3.json'
+import iso639AllCodes from '../utils/iso639AllCodes.json'
+import $ from 'jquery'
+import ArborNode from './ArborNode'
 
 class Wiktionary {
-  static constructUrl(word) {
-    return `https://en.wiktionary.org/w/api.php?format=json&action=query&titles=${word}&rvprop=content&prop=revisions&redirects=1&origin=*&callback=?`
-  }
-
-  static normalizeWikiData(text) {
-		const linkRegex = /(\[+)([\w\s-]+)(\]+)/g;
-		const type2LinkRegex = /(\[+)(\w+)([#|]+)(\w+)(\]+)/g;
-		const wikipediaArticleRegex = /(\[+)(:?w:)([\w\s]+)\|([\w\s]+)(\]+)/g;
-		const contextDataRegex = /(\[+)([\w\W]+)(\]+)|({+)([\w\W]+)(}+)/g;
-
-    const normalizedText = text
-      .replace(linkRegex, '$2')
-      .replace(type2LinkRegex, '$4')
-      .replace(wikipediaArticleRegex, '$4')
-      .replace(contextDataRegex, '')
-
-    return normalizedText
-  }
-
-  static parseTextFromApi(content, lang) {
-    const definitions = []
-    const parsedLang = lang.split(" (")[0]
-
-    const text = content.split('\n')
-
-    let heading1, heading2, heading3
-
-    const heading1Regex = /^(==)([\w\s]+)(==)$/g;
-		const heading2Regex = /^(===)([\w\s]+)(===)$/g;
-		const heading3Regex = /^(====)([\w\s]+)(====)$/g;
-		const startingAndTrailingCommasRegex = /(^, )|(,$)/g;
-    const startingAndTrailingWhitespaceRegex = /^\s+|\s+$/g;
-		const italicsRegex = /''/g;
-		const wordCharactersRegex = /\w/g;
-
-    for (const line of text) {
-      if (heading1Regex.test(line)) {
-        heading1 = line.replace(heading1Regex, '$2')
-      }
-      if (heading2Regex.test(line)) {
-        heading2 = line.replace(heading2Regex, '$2')
-      }
-      if (heading3Regex.test(line)) {
-        heading3 = line.replace(heading3Regex, '$2')
-      }
-
-      if (line.indexOf('# ') === 0 && heading1 === parsedLang) {
-        let newDefinition = line.replace('# ', '')
-        newDefinition = Wiktionary.normalizeWikiData(newDefinition)
-        newDefinition = newDefinition.replace(startingAndTrailingCommasRegex, '')
-        newDefinition = newDefinition.replace(startingAndTrailingWhitespaceRegex, '')
-        newDefinition = newDefinition.replace(italicsRegex, '')
-
-        if (wordCharactersRegex.test(newDefinition)) {
-          let heading = heading2
-
-          if (heading.toLowerCase().indexOf('etymology') !== -1 || heading.toLowerCase().indexOf('pronunciation') !== -1) {
-            heading = heading3
-          }
-
-          definitions.push({
-            meaning: newDefinition,
-            type: heading
-          })
-        }
-      }
-    }
-
-    return definitions
-  }
-
-  constructor(baseLang) {
-    this.baseLang = baseLang
-  }  
-
-  async query(word, lang) {
-    const url = Wiktionary.constructUrl(word)
+  static async getDefinitionRes(title) {
+    const url = `https://en.wiktionary.org/api/rest_v1/page/definition/${title}?redirect=false`
     const res = await fetch(url)
+    return await res.json()
+  }
 
-    const body = await res.text()
-    const data = JSON.parse(body.slice(5, -1))
-
-    const pages = data?.query?.pages
-
-    if (!Object.keys(pages).length) return false
-
-    const results = {
-      title: '',
-      definitions: [],
+  static async getHtmlRes(title) {
+    const url = `https://en.wiktionary.org/api/rest_v1/page/html/${title}`
+    
+    const res = await fetch(url)
+    if (res.ok) {
+      return await res.text()
     }
 
-    let title, content
+    return false
+  }
 
-    for (const page in pages) {
-      title = data.query.pages[page].title
-      content = data.query.pages[page].revisions[0]['*']
+  static parseDefinitionRes(res, lang) {
+    const parsedLang = iso639_3[lang].split(' (')[0]
+
+    const htmlTagRegex = /<.*?>/g
+    const trimWhitespaceRegex = /^\s+|\s+$/g
+
+    let allGroups = []
+
+    for (const group in res) {
+      allGroups = allGroups.concat(res[group])
     }
 
-    results.title = title
-    results.definitions = Wiktionary.parseTextFromApi(content, lang || "English")
+    const byPartsOfSpeech = {}
 
-    return results
+    for (const group of allGroups) {
+      const {
+        definitions,
+        language,
+        partOfSpeech,
+      } = group
+
+      if (language === parsedLang) {
+        byPartsOfSpeech[partOfSpeech] = definitions.map(({ definition }) => {
+          const parsed = definition.replace(htmlTagRegex, '')
+          const trimmed = parsed.replace(trimWhitespaceRegex, '')
+          return trimmed
+        })
+      }
+    }
+
+    return byPartsOfSpeech
+  }
+
+  static async getTopDefinition(word, langRefName) {
+    const res = await Wiktionary.getDefinitionRes(word)    
+
+    let allGroups = []
+
+    for (const group in res) {
+      allGroups = allGroups.concat(res[group])
+    }
+
+    const langDefinitions = allGroups?.find((group) => group.language === langRefName)?.definitions || []
+
+    for (const langDefinition of langDefinitions) {
+      const { definition } = langDefinition
+
+      if (definition) return definition
+    }
+
+    return ''
+  }
+
+  static async getBaseForm(word, langRefName) {
+    const topDefinitionHtml = await Wiktionary.getTopDefinition(word, langRefName)
+
+    // create jQuery object from the HTML-type response
+    const formOfDefinitionLinkText = $($.parseHTML(topDefinitionHtml))
+      // select the element that would hold the base form
+      .find('.form-of-definition-link')
+      // get its innerText (empty string if no such element is found)
+      .text()
+
+    return formOfDefinitionLinkText || word
+  }
+
+  static async getEtymologies(word, langRefName = 'English', filterHomographs = true, filterAffixes = false) {
+    const parsedLangRefName = langRefName.replace(/ /g,"_")
+    const targetWord = word.replace(/^\*/g, `Reconstruction%3A${parsedLangRefName}%2F`)
+
+    const htmlRes = await Wiktionary.getHtmlRes(targetWord)
+
+    if (!htmlRes) return []
+
+    // create jQuery object from the HTML-type response
+    const $langSection = $($.parseHTML(htmlRes))
+      // select the section that matches the target language
+      .has(`h2#${parsedLangRefName}`)
+
+    // select the etymology header(s)
+    let $etymologyHeaders = $langSection.find('h3[id^=Etymology]')
+
+    // take only the first header if filtering homographs
+    if (filterHomographs) {
+      $etymologyHeaders = $etymologyHeaders.first()
+    }
+
+    let $etymologies = $()
+
+    $etymologyHeaders.each((_, domObj) => {
+      // for each header, select section content that may contain target information
+      const $targetEtymology = $(domObj).nextUntil('h3, h4, h5')
+        // select items likely to be an etymology reference
+        .find('i.mention:not(.e-example)')
+        // select the first such item
+        .first()
+
+      // consider etymology structures that are separated by morpheme (prefix, suffix)
+      let $nextPiece = $targetEtymology
+      let $morphemes = $($nextPiece)
+      
+      // these are generally marked with a "+" in a subsequent <span>
+      while ($nextPiece.nextUntil('i').text().includes('+')) {
+        // add the next etymology item to the selection if it follows this structure
+        $nextPiece = $nextPiece.nextAll('i.mention:not(.e-example)').first()
+        $morphemes = $morphemes.add($nextPiece)
+      }
+
+      $etymologies = $etymologies.add($morphemes)
+    })
+
+    // also look for a primary base form of the word, e.g. is the first definition
+    // in the language section
+    $etymologies = $etymologies.add(
+      $langSection.find('ol > li span.form-of-definition-link > i.mention')
+        .first()
+    )
+
+    if (filterAffixes) {
+      $etymologies = $etymologies.filter((_, domObj) => $(domObj).find('a').attr('title').match(/(^-)|(-$)/g) === null)
+    }
+
+    return $etymologies.map((_, domObj) => {
+      const targetLangRefName = domObj.lang.length === 2 ? iso639_1[domObj.lang] : iso639_3[domObj.lang]
+      const targetLang3 = iso639AllCodes[targetLangRefName].alpha3
+
+      const targetTitle = $(domObj).find('a').attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
+      
+      return new ArborNode(`${targetLang3}: ${targetTitle}`)
+    }).get()
+  }
+
+  constructor(word, lang = "eng") {
+    this.word = word
+    this.lang3 = lang
+    this.langRefName = iso639_3[lang].split(' (')[0]
   }
 }
 

@@ -3,18 +3,18 @@ import { useSelector } from "react-redux"
 
 import './index.scss'
 
-function Loading() {
-  const { seed } = useSelector((state) => state.tree)
+function Status() {
+  const { source } = useSelector((state) => state.network)
   const { error, loading } = useSelector((state) => state.ui)
 
   return (
     <div className={classNames('status', { error })}>
-      {loading ? 'Building tree...'
+      {loading ? 'Building network...'
         : error ? error
-        : seed ? `Done building tree for "${seed}".`
+        : source ? `Done building network for "${source}".`
         : 'Ready.'}
     </div>
   )
 }
 
-export default Loading
+export default Status

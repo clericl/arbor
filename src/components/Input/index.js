@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { plantSeed } from "../../redux/actions"
+import { requestNetwork } from "../../redux/actions"
 
-import iso from '../../utils/iso.json'
-import Wiktionary from "../../utils/Wiktionary"
+import iso from '../../utils/iso639-3.json'
 import './index.scss'
 
 function Input() {
@@ -24,7 +23,7 @@ function Input() {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    dispatch(plantSeed(`${lang}: ${value}`))
+    dispatch(requestNetwork(`${lang}: ${value}`))
     ref.current.blur()
   }
 
@@ -34,14 +33,6 @@ function Input() {
 
   useEffect(() => {
     ref.current.focus()
-
-    const runTest = async () => {
-      const parser = new Wiktionary()
-      const result = await parser.query('cheese')
-      console.log(result)
-    }
-
-    runTest()
   }, [])
 
   return (

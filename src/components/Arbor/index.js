@@ -10,7 +10,7 @@ function Arbor() {
   const [chartInit, setChartInit] = useState(false)
   const [data, setData] = useState([])
 
-  const { branches, seed, trunk, trunkGenerated } = useSelector((state) => state.tree)
+  const { nodes, links, source } = useSelector((state) => state.network)
 
   const chartRef = useRef(null)
   const nodeRef = useRef(null)
@@ -21,45 +21,45 @@ function Arbor() {
     dispatch(setWord(datum?.data?.source))
   }, [dispatch])
 
-  useEffect(() => {
-    if (trunkGenerated) {
-      setData(trunk.concat(branches))
-    }
-  }, [trunk, trunkGenerated, branches])
+  // useEffect(() => {
+  //   if (trunkGenerated) {
+  //     setData(trunk.concat(branches))
+  //   }
+  // }, [trunk, trunkGenerated, branches])
 
-  useEffect(() => {
-    if (chartRef.current && chartInit) {
-      if (chartRef.current.svg && data.length) {
-        const statusObj = chartRef.current.ingestData(data)
+  // useEffect(() => {
+  //   if (chartRef.current && chartInit) {
+  //     if (chartRef.current.svg && data.length) {
+  //       const statusObj = chartRef.current.ingestData(data)
 
-        if (!statusObj.hasError) {
-          chartRef.current.updateTree()
-        } else {
-          dispatch(ingestionFailed(statusObj))
-        }
-      }
-    }
-  }, [chartInit, data, dispatch])
+  //       if (!statusObj.hasError) {
+  //         chartRef.current.updateTree()
+  //       } else {
+  //         dispatch(ingestionFailed(statusObj))
+  //       }
+  //     }
+  //   }
+  // }, [chartInit, data, dispatch])
 
-  useEffect(() => {
-    if (seed) {
-      chartRef.current = new Chart(nodeRef.current, handleSelectNode)
-      chartRef.current.initTree()
+  // useEffect(() => {
+  //   if (seed) {
+  //     chartRef.current = new Chart(nodeRef.current, handleSelectNode)
+  //     chartRef.current.initTree()
         
-      setChartInit(true)
-    } else {
-      if (chartRef.current) {
-        chartRef.current.destroyTree()
-        chartRef.current = null
-      }
-    }
+  //     setChartInit(true)
+  //   } else {
+  //     if (chartRef.current) {
+  //       chartRef.current.destroyTree()
+  //       chartRef.current = null
+  //     }
+  //   }
 
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroyTree()
-      }
-    }
-  }, [handleSelectNode, seed])
+  //   return () => {
+  //     if (chartRef.current) {
+  //       chartRef.current.destroyTree()
+  //     }
+  //   }
+  // }, [handleSelectNode, seed])
 
   return (
     <div className="arbor-chart" ref={nodeRef}></div>

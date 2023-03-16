@@ -4,7 +4,7 @@
 // https://observablehq.com/@d3/radial-tree
 
 import * as d3 from 'd3'
-import iso from './iso.json'
+import iso from './iso639-3.json'
 
 class Chart {
   constructor(mountEl, selectNode, {
@@ -238,12 +238,12 @@ class Chart {
             setActiveNode(this, d)
           })
           .on("mouseover", function(_, d) {
-            console.log(d)
             d3.select(this)
               .transition()
               .duration(100)
               .ease(d3.easeQuadOut)
               .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0) scale(1.5)`)
+              .attr("z-index", 2)
               .select("g.captions")
                 .attr("transform", `rotate(${90 - (180 * d.x / Math.PI)})`)
           })
@@ -253,6 +253,7 @@ class Chart {
               .duration(100)
               .ease(d3.easeQuadOut)
               .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
+              .attr("z-index", 0)
               .select("g.captions")
                 .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`)
           })
