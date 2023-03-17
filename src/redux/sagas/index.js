@@ -1,50 +1,46 @@
 import BigQuery from '../../utils/BigQuery'
-import { all, call, cancel, delay, put, select, take, takeLatest } from 'redux-saga/effects'
-import { fetchingEtymologies, fetchEtymologiesSucceeded, fetchEtymologiesFailed, fetchingDescendants, fetchDescendantsSucceeded, fetchDescendantsFailed, buildingTrunk, buildTrunkComplete, buildingBranches, buildBranchesComplete, fetchingNetwork, fetchNetworkSucceeded, fetchNetworkFailed, savingNetwork, saveNetworkSucceeded, saveNetworkFailed, requestNetwork } from '../actions'
+import { all, call, cancel, cancelled, delay, fork, put, select, take, takeLatest } from 'redux-saga/effects'
+import { fetchingEtymologies, fetchEtymologiesSucceeded, fetchEtymologiesFailed, fetchingDescendants, fetchDescendantsSucceeded, fetchDescendantsFailed, buildingTrunk, buildTrunkComplete, buildingBranches, buildBranchesComplete, fetchingTree, fetchTreeSucceeded, fetchTreeFailed, savingTree, saveTreeSucceeded, saveTreeFailed, requestTree, cancelTree, treeFailed, ingestionFailed } from '../actions'
 import { clearError, finishLoading, setError, startLoading } from '../reducers/ui'
 import Wiktionary from '../../utils/Wiktionary'
-import { addLink, addNode, resetNetwork, setLinks, setNodes, setSource } from '../reducers/network'
-import ArborLink from '../../utils/ArborLink'
+import { addNode, resetTree, setNodes, setSource } from '../reducers/tree'
 import ArborNode from '../../utils/ArborNode'
 
-function* fetchNetwork(source) {
-  yield put(fetchingNetwork())
+function* fetchTree(source) {
+  yield put(fetchingTree())
 
   try {
-    const data = yield call([BigQuery, 'fetchNetwork'], source)
-    yield put(fetchNetworkSucceeded(!!data?.meta?.count))
+    const data = yield call([BigQuery, 'fetchTree'], source)
+    yield put(fetchTreeSucceeded(!!data?.meta?.count))
 
     return data
   } catch(e) {
     console.warn(e)
     const errorObj = {
       hasError: true,
-      type: 'fetchNetworkFailed',
+      type: 'fetchTreeFailed',
       source,
     }
-    yield put(fetchNetworkFailed(errorObj))
+    yield put(fetchTreeFailed(errorObj))
   }
 }
 
-function* saveNetwork(source, nodes, links) {
-  yield put(savingNetwork())
-
-  const parsedNodes = nodes.map((node) => JSON.parse(node))
-  const parsedLinks = links.map((link) => JSON.parse(link))
+function* saveTree(source, nodes) {
+  yield put(savingTree())
 
   try {
-    const data = yield call([BigQuery, 'saveNetwork'], { source, nodes: parsedNodes, links: parsedLinks })
-    yield put(saveNetworkSucceeded())
+    const data = yield call([BigQuery, 'saveTree'], { source, nodes })
+    yield put(saveTreeSucceeded())
 
     return data
   } catch(e) {
     console.warn(e)
     const errorObj = {
       hasError: true,
-      type: 'saveNetworkFailed',
+      type: 'saveTreeFailed',
       source,
     }
-    yield put(saveNetworkFailed(errorObj))
+    yield put(saveTreeFailed(errorObj))
   }
 }
 
@@ -54,14 +50,14 @@ function* saveNetwork(source, nodes, links) {
  * @returns {ArborNode[]}
  */
 function* fetchEtymologies(node) {
-  yield put(fetchingEtymologies())
-  const { filterHomographs } = yield select((state) => state.words.options)
+  yield put(fetchingEtymologies(node.source))
+  const { filterHomographs } = yield select((state) => state.tree.options)
 
   try {
     const etymologies = yield call(
       [Wiktionary, 'getEtymologies'],
-      node.word,
-      node.langRefName,
+      node.sourceWord,
+      node.sourceLang.refName,
       filterHomographs
     )
 
@@ -86,15 +82,17 @@ function* fetchEtymologies(node) {
  * @returns {ArborNode[]}
  */
 function* fetchDescendants(node) {
-  yield put(fetchingDescendants())
+  yield put(fetchingDescendants(node.source))
+  const { descendantsLimit } = yield select((state) => state.tree.options)
 
   try {
     const res = yield call(
       [BigQuery, 'fetchDescendants'],
-      `${node.lang3}: ${node.word}`
+      `${node.sourceLang.alpha3}: ${node.sourceWord}`,
+      descendantsLimit
     )
 
-    const descendants = res.data.map((datum) => new ArborNode(datum.source))
+    const descendants = res.data.map((datum) => new ArborNode(datum))
 
     yield put(fetchDescendantsSucceeded(descendants.length))
     return descendants
@@ -119,130 +117,193 @@ function* fetchDescendants(node) {
  * @returns {{ancestors: ArborNode[], links: ArborLink[]}}
  */
 function* extendTrunk(node) {
-  const nodesInState = yield select((state) => state.network.nodes)
-  const ancestors = yield call(fetchEtymologies, node)
+  if (node.source.match(/#/g)) return []
+
+  const nodesInState = yield select((state) => state.tree.nodes)
+  const [ancestors] = yield all([
+    call(fetchEtymologies, node),
+    delay(500),
+  ])
  
   const concatenated = [...ancestors]
-  const links = []
 
   for (const ancestor of ancestors) {
-    const nodeString = ancestor.toString()
     if (
-      ancestor.equals(node) ||
-      nodesInState.find((node) => node === nodeString)
+      (node.source === ancestor.target &&
+        node.target === ancestor.source) ||
+      nodesInState.find((node) => ArborNode.areEqual(node, ancestor))
     ) continue;
 
-    const newLink = new ArborLink(node, ancestor)
+    if (nodesInState.find((node) => node.source === ancestor.source)) {
+      ancestor.source += '#'
+    }
 
-    yield put(addNode(nodeString))
-    yield put(addLink(newLink.toString()))
-
-    links.push(newLink)
+    const serializedNode = ancestor.serialize()
+    yield put(addNode(serializedNode))
 
     const newAncestors = yield call(extendTrunk, ancestor)
-    concatenated.push(...newAncestors.ancestors)
-    links.push(...newAncestors.links)
+    concatenated.push(...newAncestors)
   }
 
-  return {
-    ancestors: concatenated,
-    links,
-  }
+  return concatenated
 }
 
-function* extendBranches(node) {
-  const nodesInState = yield select((state) => state.network.nodes)
-  const descendants = yield call(fetchDescendants, node)
+function* extendBranches(node, recurse = false) {
+  const nodesInState = yield select((state) => state.tree.nodes)
+  const [descendants] = yield all([
+    call(fetchDescendants, node),
+    delay(500),
+  ])
  
   const concatenated = [...descendants]
-  const links = []
 
   for (const descendant of descendants) {
-    const nodeString = descendant.toString()
     if (
       descendant.equals(node) ||
-      nodesInState.find((node) => node === nodeString)
+      nodesInState.find((node) => ArborNode.areEqual(node, descendant))
     ) continue;
 
-    const newLink = new ArborLink(descendant, node)
+    if (nodesInState.find((node) => node.source === descendant.source)) {
+      descendant.source += '#'
+    }
 
-    yield put(addNode(nodeString))
-    yield put(addLink(newLink.toString()))
+    const serializedNode = descendant.serialize()
+    yield put(addNode(serializedNode))
 
-    links.push(newLink)
-
-    const nextDescendants = yield call(extendBranches, descendant)
-    concatenated.push(...nextDescendants.descendants)
-    links.push(...nextDescendants.links)
+    if (recurse) {
+      const nextDescendants = yield call(extendBranches, descendant)
+      concatenated.push(...nextDescendants)
+    }
   }
 
-  return {
-    descendants: concatenated,
-    links,
-  }
+  return concatenated
 }
 
 /**
  * Find all nodes and links for a seed source.
  * @param {Action} action
  */
-function* buildNetwork(action) {
+function* buildTree(action) {
   if (!action.payload) return false
 
   yield put(startLoading())
-  yield put(resetNetwork())
+  yield put(resetTree())
   yield put(clearError())
 
-  yield delay(500)
-
-  yield put(setSource(action.payload))
-
-  const fetchedNetworkRes = yield call(fetchNetwork, action.payload)
-  if (fetchedNetworkRes.meta.count) {
-    const fetchedNetwork = fetchedNetworkRes.data[0]
-
-    const stringNodes = JSON.parse(fetchedNetwork.links).map((node) => JSON.stringify(node))
-    const stringLinks = JSON.parse(fetchedNetwork.nodes).map((link) => JSON.stringify(link))
-
-    yield put(setLinks(stringNodes))
-    yield put(setNodes(stringLinks))
-
-    yield put(buildTrunkComplete())
-    yield put(buildBranchesComplete())
-  } else {
-    yield put(buildingTrunk())
+  try {
+    yield delay(500)
   
-    const seedNode = new ArborNode(action.payload)
-    const { ancestors } = yield call(extendTrunk, seedNode)
+    yield put(setSource(action.payload))
   
-    yield put(buildTrunkComplete())
-
-    if (ancestors.length) {
-      yield put(buildingBranches())
-      for (const ancestor of ancestors) {
-        yield call(extendBranches, ancestor)
+    const fetchedTreeRes = yield call(fetchTree, action.payload)
+    if (fetchedTreeRes.meta.count) {
+      const fetchedTree = fetchedTreeRes.data[0]
+  
+      const parsedNodes = JSON.parse(fetchedTree.nodes)
+      yield put(setNodes(parsedNodes))
+  
+      yield put(buildTrunkComplete())
+      yield put(buildBranchesComplete())
+    } else {
+      yield put(buildingTrunk())
+    
+      const seedNode = new ArborNode(action.payload, null, 'rel:seed')
+      const ancestors = yield call(extendTrunk, seedNode)
+    
+      yield put(buildTrunkComplete())
+  
+      if (ancestors.length) {
+        yield put(buildingBranches())
+        for (const ancestor of ancestors) {
+          yield call(extendBranches, ancestor)
+        }
+      
+        yield put(buildBranchesComplete())
       }
     
-      yield put(buildBranchesComplete())
-    }
+      const { nodes } = yield select((state) => state.tree)
   
-    const { nodes, links } = yield select((state) => state.network)
-    const nodesToSave = nodes.map((node) => node.toString())
-    const linksToSave = links.map((link) => link.toString())
+      // yield call(saveTree, action.payload, nodes)
+    }
+  } catch (e) {
+    console.warn(e)
+    const errorObj = {
+      hasError: true,
+      type: 'treeFailed',
+      source: action.payload,
+    }
+    yield put(treeFailed(errorObj))
+  } finally {
+    yield put(finishLoading())
 
-    yield call(saveNetwork, action.payload, nodesToSave, linksToSave)
+    if (yield cancelled()) {
+      const errorObj = {
+        hasError: true,
+        type: 'treeCanceled',
+        source: action.payload,
+      }
+      yield put(treeFailed(errorObj))
+    }
   }
-
-  yield put(finishLoading())
 }
 
-function* watchRequestNetwork() {
-  yield takeLatest(requestNetwork, buildNetwork)
+function* handleError(action) {
+  const errorObj = action.payload
+
+  switch (errorObj.type) {
+    case 'notFound':
+      yield put(setError('Could not find this word in the etymology database!'))
+      break
+    case 'fetchChildrenFailed':
+      yield put(setError(`Could not fetch related words for: ${errorObj.source}.`))
+      break;
+    case 'treeCanceled':
+      yield put(setError(`Canceled!`))
+      break;
+    default:
+      yield put(setError('An unknown error occurred!'))
+  }
+}
+
+function* watchRequestTree() {
+  let lastTask = null
+
+  while (true) {
+    const action = yield take([
+      cancelTree,
+      requestTree,
+    ])
+
+    if (action.type === requestTree.type) {
+      if (lastTask) {
+        yield cancel(lastTask)
+      }
+  
+      lastTask = yield fork(buildTree, action)
+    } else if (action.type === cancelTree.type) {
+      if (lastTask) {
+        yield cancel(lastTask)
+        lastTask = null
+      }
+    }
+  }
+}
+
+function* watchHandleError() {
+  yield takeLatest([
+    ingestionFailed,
+    fetchTreeFailed,
+    saveTreeFailed,
+    fetchEtymologiesFailed,
+    fetchDescendantsFailed,
+    treeFailed,
+  ], handleError)
 }
 
 function* rootSaga() {
   yield all([
-    watchRequestNetwork(),
+    watchRequestTree(),
+    watchHandleError(),
   ])
 }
 

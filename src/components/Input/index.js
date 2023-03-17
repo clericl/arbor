@@ -1,9 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { requestNetwork } from "../../redux/actions"
+import { cancelTree, requestTree } from "../../redux/actions"
 
-import iso from '../../utils/iso639-3.json'
+import iso639_1 from '../../utils/iso639-1.json'
+import iso639AllCodes from '../../utils/iso639AllCodes.json'
 import './index.scss'
+
+const langOpts = Object.values(iso639_1).sort().map((lang) => (
+  <option className="lang-option" key={lang} value={iso639AllCodes[lang].alpha3}>{lang}</option>
+))
 
 function Input() {
   const [lang, setLang] = useState('eng')
@@ -23,32 +28,39 @@ function Input() {
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    dispatch(requestNetwork(`${lang}: ${value}`))
+    dispatch(requestTree(`${lang}: ${value}`))
     ref.current.blur()
   }
 
-  const renderLangOptions = useCallback(() => Object.entries(iso).sort((a, b) => a[1] > b[1] ? 1 : -1).map(([key, value]) => (
-    <option className="lang-option" key={key} value={key}>{value}</option>
-  )), [])
+  const handleCancel = () => {
+    dispatch(cancelTree())
+  }
 
   useEffect(() => {
     ref.current.focus()
   }, [])
 
   return (
-    <form className="input-form" onSubmit={handleSubmit}>
-      <input
-        className="input"
-        disabled={loading}
-        onInput={handleInput}
-        placeholder="Enter your word here."
-        value={value}
-        ref={ref}
-      />
-      <select className="lang-select" value={lang} onChange={handleChange}>
-        {renderLangOptions()}
-      </select>
-    </form>
+    <div className="input">
+      <form className="input-form" onSubmit={handleSubmit}>
+        <input
+          className="input"
+          disabled={loading}
+          onInput={handleInput}
+          placeholder="Enter your word here."
+          value={value}
+          ref={ref}
+        />
+        <select className="lang-select" value={lang} onChange={handleChange}>
+          {langOpts}
+        </select>
+      </form>
+      {loading && (
+        <button className="cancel-button" onClick={handleCancel}>
+          &times;
+        </button>
+      )}
+    </div>
   )
 }
 

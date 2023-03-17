@@ -1,55 +1,67 @@
 @use '../../styles/constants.scss' as *;
 
-.input-form {
-  width: 100%;
-  background-color: transparent;
-  overflow: visible;
+.input {
   position: relative;
-  z-index: 1;
-  border: 1px solid $color-background;
-  border-left: none;
-  border-bottom: none;
-  box-sizing: border-box;
-  
-  .input {
-    border: none;
-    width: 100%;
-    box-sizing: border-box;
-    padding: 0.5rem 1rem;
-    background-color: white;
-    font-family: 'EB Garamond', serif;
-    font-size: 1.5rem;
-    text-align: center;
-    outline: none;
-    color: $color-background;
-    transition: all 200ms ease-out;
 
-    &::placeholder {
+  .input-form {
+    width: 100%;
+    background-color: transparent;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+    border: 1px solid $color-background;
+    border-left: none;
+    border-bottom: none;
+    box-sizing: border-box;
+    
+    .input {
+      border: none;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.5rem 1rem;
+      background-color: white;
+      font-family: 'EB Garamond', serif;
+      font-size: 1.5rem;
+      text-align: center;
+      outline: none;
+      color: $color-background;
+      transition: all 200ms ease-out;
+  
+      &::placeholder {
+        color: $color-background;
+      }
+  
+      &:disabled {
+        opacity: 0.5;
+        background-color: lightgray;
+      }
+    }
+  
+    .lang-select {
+      position: absolute;
+      right: 1rem;
+      top: 0;
+      transform: translateY(calc(-100% - 0.25rem));
+      width: 75px;
+      background-color: transparent;
+      border: none;
+      border-radius: 5px;
+      font-family: $typeface-primary;
+      font-size: 1rem;
       color: $color-background;
     }
-
-    &:disabled {
-      opacity: 0.5;
-      background-color: lightgray;
+  
+    .lang-option {
+      background-color: transparent;
     }
   }
 
-  .lang-select {
+  .cancel-button {
     position: absolute;
+    top: 50%;
     right: 1rem;
-    top: 0;
-    transform: translateY(calc(-100% - 0.25rem));
-    width: 75px;
-    background-color: transparent;
-    border: none;
-    border-radius: 5px;
-    font-family: $typeface-primary;
-    font-size: 1rem;
-    color: $color-background;
-  }
-
-  .lang-option {
-    background-color: transparent;
+    transform: translateY(-50%);
+    z-index: 2;
   }
 }
 

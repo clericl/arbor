@@ -1,14 +1,14 @@
 import { createAction } from "@reduxjs/toolkit";
 
-export const requestFetchNetwork = createAction('arbor/requestFetchNetwork')
-export const fetchingNetwork = createAction('arbor/fetchingNetwork')
-export const fetchNetworkSucceeded = createAction('arbor/fetchNetworkSucceeded')
-export const fetchNetworkFailed = createAction('arbor/fetchNetworkFailed')
+export const requestFetchTree = createAction('arbor/requestFetchTree')
+export const fetchingTree = createAction('arbor/fetchingTree')
+export const fetchTreeSucceeded = createAction('arbor/fetchTreeSucceeded')
+export const fetchTreeFailed = createAction('arbor/fetchTreeFailed')
 
-export const requestSaveNetwork = createAction('arbor/requestSaveNetwork')
-export const savingNetwork = createAction('arbor/savingNetwork')
-export const saveNetworkSucceeded = createAction('arbor/saveNetworkSucceeded')
-export const saveNetworkFailed = createAction('arbor/saveNetworkFailed')
+export const requestSaveTree = createAction('arbor/requestSaveTree')
+export const savingTree = createAction('arbor/savingTree')
+export const saveTreeSucceeded = createAction('arbor/saveTreeSucceeded')
+export const saveTreeFailed = createAction('arbor/saveTreeFailed')
 
 export const requestFetchEtymologies = createAction('arbor/requestFetchEtymologies')
 export const fetchingEtymologies = createAction('arbor/fetchingEtymologies')
@@ -26,9 +26,9 @@ export const buildTrunkComplete = createAction('arbor/buildTrunkComplete')
 export const buildingBranches = createAction('arbor/buildingBranches')
 export const buildBranchesComplete = createAction('arbor/buildBranchesComplete')
 
-export const requestNetwork = createAction('arbor/requestNetwork')
-export const networkFailed = createAction('arbor/networkFailed')
-export const networkGenerated = createAction('arbor/networkGenerated')
+export const requestTree = createAction('arbor/requestTree')
+export const treeFailed = createAction('arbor/treeFailed')
+export const treeGenerated = createAction('arbor/treeGenerated')
 
 export const ingestionFailed = createAction('arbor/ingestionFailed')
-export const cancelNetwork = createAction('arbor/cancelNetwork')
+export const cancelTree = createAction('arbor/cancelTree')

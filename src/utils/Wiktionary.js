@@ -1,8 +1,8 @@
-import iso639_1 from '../utils/iso639-1.json'
-import iso639_3 from '../utils/iso639-3.json'
-import iso639AllCodes from '../utils/iso639AllCodes.json'
 import $ from 'jquery'
 import ArborNode from './ArborNode'
+import Language from './Language'
+
+import iso639_3 from '../utils/iso639-3.json'
 
 class Wiktionary {
   static async getDefinitionRes(title) {
@@ -144,20 +144,19 @@ class Wiktionary {
       $etymologies = $etymologies.filter((_, domObj) => $(domObj).find('a').attr('title').match(/(^-)|(-$)/g) === null)
     }
 
+    const targetSource = `${new Language(langRefName).alpha3}: ${word}`
+
     return $etymologies.map((_, domObj) => {
-      const targetLangRefName = domObj.lang.length === 2 ? iso639_1[domObj.lang] : iso639_3[domObj.lang]
-      const targetLang3 = iso639AllCodes[targetLangRefName].alpha3
+      let targetTitle = domObj.innerText
 
-      const targetTitle = $(domObj).find('a').attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
-      
-      return new ArborNode(`${targetLang3}: ${targetTitle}`)
+      const $domObj = $(domObj).find('a').first()
+
+      if ($domObj.length) {
+        targetTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
+      }
+
+      return new ArborNode(`${new Language(domObj.lang).alpha3}: ${targetTitle}`, targetSource, 'rel:etymological_origin_of')
     }).get()
-  }
-
-  constructor(word, lang = "eng") {
-    this.word = word
-    this.lang3 = lang
-    this.langRefName = iso639_3[lang].split(' (')[0]
   }
 }
 

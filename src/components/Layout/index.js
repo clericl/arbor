@@ -1,5 +1,5 @@
 import Input from "../Input"
-// import Arbor from "../Arbor"
+import Arbor from "../Arbor"
 import InformationPanel from "../InformationPanel"
 import Status from "../Status"
 
@@ -11,7 +11,7 @@ function Layout() {
       <InformationPanel />
       <div className="workspace">
         <div className="chart-wrapper">
-          {/* <Arbor /> */}
+          <Arbor />
           <Status />
         </div>
         <Input />

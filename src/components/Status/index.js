@@ -4,7 +4,7 @@ import { useSelector } from "react-redux"
 import './index.scss'
 
 function Status() {
-  const { source } = useSelector((state) => state.network)
+  const { source } = useSelector((state) => state.tree)
   const { error, loading } = useSelector((state) => state.ui)
 
   return (
