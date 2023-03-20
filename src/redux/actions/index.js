@@ -20,15 +20,8 @@ export const fetchingDescendants = createAction('arbor/fetchingDescendants')
 export const fetchDescendantsSucceeded = createAction('arbor/fetchDescendantsSucceeded')
 export const fetchDescendantsFailed = createAction('arbor/fetchDescendantsFailed')
 
-export const buildingTrunk = createAction('arbor/buildingTrunk')
-export const buildTrunkComplete = createAction('arbor/buildTrunkComplete')
-
-export const buildingBranches = createAction('arbor/buildingBranches')
-export const buildBranchesComplete = createAction('arbor/buildBranchesComplete')
-
 export const requestTree = createAction('arbor/requestTree')
 export const treeFailed = createAction('arbor/treeFailed')
-export const treeGenerated = createAction('arbor/treeGenerated')
 
 export const ingestionFailed = createAction('arbor/ingestionFailed')
 export const cancelTree = createAction('arbor/cancelTree')

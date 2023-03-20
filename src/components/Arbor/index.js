@@ -11,7 +11,7 @@ function Arbor() {
   const [chartInit, setChartInit] = useState(false)
   const [data, setData] = useState([])
 
-  const { nodes, source } = useSelector((state) => state.tree)
+  const { done, nodes, source } = useSelector((state) => state.tree)
 
   const chartRef = useRef(null)
   const nodeRef = useRef(null)
@@ -44,6 +44,12 @@ function Arbor() {
       }
     }
   }, [chartInit, data, dispatch])
+
+  useEffect(() => {
+    if (chartRef.current && chartInit) {
+      chartRef.current.done = done
+    }
+  }, [chartInit, done])
 
   useEffect(() => {
     if (source) {

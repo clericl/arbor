@@ -1,9 +1,9 @@
 import BigQuery from '../../utils/BigQuery'
 import { all, call, cancel, cancelled, delay, fork, put, select, take, takeLatest } from 'redux-saga/effects'
-import { fetchingEtymologies, fetchEtymologiesSucceeded, fetchEtymologiesFailed, fetchingDescendants, fetchDescendantsSucceeded, fetchDescendantsFailed, buildingTrunk, buildTrunkComplete, buildingBranches, buildBranchesComplete, fetchingTree, fetchTreeSucceeded, fetchTreeFailed, savingTree, saveTreeSucceeded, saveTreeFailed, requestTree, cancelTree, treeFailed, ingestionFailed } from '../actions'
+import { fetchingEtymologies, fetchEtymologiesSucceeded, fetchEtymologiesFailed, fetchingDescendants, fetchDescendantsSucceeded, fetchDescendantsFailed, fetchingTree, fetchTreeSucceeded, fetchTreeFailed, savingTree, saveTreeSucceeded, saveTreeFailed, requestTree, cancelTree, treeFailed, ingestionFailed } from '../actions'
 import { clearError, finishLoading, setError, startLoading } from '../reducers/ui'
 import Wiktionary from '../../utils/Wiktionary'
-import { addNode, resetTree, setNodes, setSource } from '../reducers/tree'
+import { addNode, resetTree, setNodes, setSource, setTreeBuilding, setTreeDone } from '../reducers/tree'
 import ArborNode from '../../utils/ArborNode'
 
 function* fetchTree(source) {
@@ -54,12 +54,14 @@ function* fetchEtymologies(node) {
   const { filterHomographs } = yield select((state) => state.tree.options)
 
   try {
-    const etymologies = yield call(
-      [Wiktionary, 'getEtymologies'],
-      node.sourceWord,
-      node.sourceLang.refName,
-      filterHomographs
-    )
+    const [etymologies] = yield all([
+      call(
+        [Wiktionary, 'getEtymologies'],
+        node.sourceWord,
+        node.sourceLang.refName,
+        filterHomographs
+      )
+    ])
 
     yield put(fetchEtymologiesSucceeded(etymologies.length))
     return etymologies
@@ -148,8 +150,10 @@ function* extendTrunk(node) {
   return concatenated
 }
 
-function* extendBranches(node, recurse = false) {
-  const nodesInState = yield select((state) => state.tree.nodes)
+function* extendBranches(node, depth = 0) {
+  const recurse = yield select((state) => state.tree.options.recurse)
+  const seedSource = yield select((state) => state.tree.source)
+
   const [descendants] = yield all([
     call(fetchDescendants, node),
     delay(500),
@@ -158,20 +162,19 @@ function* extendBranches(node, recurse = false) {
   const concatenated = [...descendants]
 
   for (const descendant of descendants) {
-    if (
-      descendant.equals(node) ||
-      nodesInState.find((node) => ArborNode.areEqual(node, descendant))
-    ) continue;
+    const nodesInState = yield select((state) => state.tree.nodes)
 
-    if (nodesInState.find((node) => node.source === descendant.source)) {
-      descendant.source += '#'
-    }
+    if (
+      descendant.source === seedSource ||
+      descendant.equals(node) ||
+      nodesInState.find((node) => node.source === descendant.source)
+    ) continue;
 
     const serializedNode = descendant.serialize()
     yield put(addNode(serializedNode))
 
-    if (recurse) {
-      const nextDescendants = yield call(extendBranches, descendant)
+    if (recurse && depth < 4) {
+      const nextDescendants = yield call(extendBranches, descendant, depth + 1)
       concatenated.push(...nextDescendants)
     }
   }
@@ -189,6 +192,7 @@ function* buildTree(action) {
   yield put(startLoading())
   yield put(resetTree())
   yield put(clearError())
+  yield put(setTreeBuilding())
 
   try {
     yield delay(500)
@@ -201,30 +205,21 @@ function* buildTree(action) {
   
       const parsedNodes = JSON.parse(fetchedTree.nodes)
       yield put(setNodes(parsedNodes))
-  
-      yield put(buildTrunkComplete())
-      yield put(buildBranchesComplete())
     } else {
-      yield put(buildingTrunk())
-    
       const seedNode = new ArborNode(action.payload, null, 'rel:seed')
       const ancestors = yield call(extendTrunk, seedNode)
-    
-      yield put(buildTrunkComplete())
   
       if (ancestors.length) {
-        yield put(buildingBranches())
         for (const ancestor of ancestors) {
           yield call(extendBranches, ancestor)
         }
-      
-        yield put(buildBranchesComplete())
       }
     
       const { nodes } = yield select((state) => state.tree)
-  
-      // yield call(saveTree, action.payload, nodes)
+      yield call(saveTree, action.payload, nodes)
     }
+
+    yield put(setTreeDone())
   } catch (e) {
     console.warn(e)
     const errorObj = {

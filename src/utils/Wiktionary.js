@@ -2,8 +2,6 @@ import $ from 'jquery'
 import ArborNode from './ArborNode'
 import Language from './Language'
 
-import iso639_3 from '../utils/iso639-3.json'
-
 class Wiktionary {
   static async getDefinitionRes(title) {
     const url = `https://en.wiktionary.org/api/rest_v1/page/definition/${title}?redirect=false`
@@ -23,7 +21,7 @@ class Wiktionary {
   }
 
   static parseDefinitionRes(res, lang) {
-    const parsedLang = iso639_3[lang].split(' (')[0]
+    const parsedLang = new Language(lang).refName
 
     const htmlTagRegex = /<.*?>/g
     const trimWhitespaceRegex = /^\s+|\s+$/g
@@ -118,7 +116,7 @@ class Wiktionary {
         .find('i.mention:not(.e-example)')
         // select the first such item
         .first()
-
+  
       // consider etymology structures that are separated by morpheme (prefix, suffix)
       let $nextPiece = $targetEtymology
       let $morphemes = $($nextPiece)
@@ -129,7 +127,7 @@ class Wiktionary {
         $nextPiece = $nextPiece.nextAll('i.mention:not(.e-example)').first()
         $morphemes = $morphemes.add($nextPiece)
       }
-
+  
       $etymologies = $etymologies.add($morphemes)
     })
 
@@ -146,17 +144,47 @@ class Wiktionary {
 
     const targetSource = `${new Language(langRefName).alpha3}: ${word}`
 
-    return $etymologies.map((_, domObj) => {
-      let targetTitle = domObj.innerText
+    const etymologyNodes = $etymologies.map((_, domObj) => {
+      let sourceTitle = domObj.innerText
 
       const $domObj = $(domObj).find('a').first()
 
       if ($domObj.length) {
-        targetTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
+        sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
       }
 
-      return new ArborNode(`${new Language(domObj.lang).alpha3}: ${targetTitle}`, targetSource, 'rel:etymological_origin_of')
+      return new ArborNode(`${new Language(domObj.lang).alpha3}: ${sourceTitle}`, targetSource, 'rel:etymological_origin_of')
     }).get()
+
+    // consider etymologies that have a failing redirect
+    // in these cases, add the next one found
+    for await (const domObjToTest of $etymologies.get()) {
+      const $domObjToTest = $(domObjToTest)
+      const definitionRes = await Wiktionary.getDefinitionRes($domObjToTest.text())
+      const parsedDefinitionRes = Wiktionary.parseDefinitionRes(definitionRes, $domObjToTest.attr('lang'))
+      
+      if ($.isEmptyObject(parsedDefinitionRes)) {
+        const $nextItem = $(domObjToTest).nextAll('i.mention:not(.e-example)').first()
+
+        if ($nextItem.length) {
+          let sourceTitle = $nextItem.text()
+  
+          const $domObj = $nextItem.find('a').first()
+    
+          if ($domObj.length) {
+            sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
+          }
+    
+          etymologyNodes.push(new ArborNode(
+            `${new Language($nextItem.attr('lang')).alpha3}: ${sourceTitle}`,
+            `${new Language($domObjToTest.attr('lang')).alpha3}: ${$domObjToTest.text()}`,
+            'rel:etymological_origin_of'
+          ))
+        }
+      }
+    }
+
+    return etymologyNodes
   }
 }
 

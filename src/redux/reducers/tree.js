@@ -2,13 +2,15 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const defaultOptions = {
   lang: 'English',
-  descendantsLimit: 20,
+  descendantsLimit: 10,
   filterHomographs: true,
+  recurse: true,
 }
 
 const treeSlice = createSlice({
   name: 'tree',
   initialState: {
+    done: true,
     source: null,
     nodes: [],
     options: defaultOptions,
@@ -42,6 +44,12 @@ const treeSlice = createSlice({
     setSource(state, action) {
       state.source = action.payload
     },
+    setTreeBuilding(state) {
+      state.done = false
+    },
+    setTreeDone(state) {
+      state.done = true
+    },
   }
 })
 
@@ -52,7 +60,9 @@ export const {
   setLang,
   setNodes,
   setOptions,
+  setTreeBuilding,
   setSource,
+  setTreeDone,
 } = treeSlice.actions
 
 export default treeSlice.reducer

@@ -6,17 +6,18 @@
 import * as d3 from 'd3'
 
 class Chart {
-  constructor(mountEl, selectNode) {
+  constructor(mountEl, selectNode, done) {
     this.mountEl = mountEl
     this.selectNode = selectNode
+    this.done = done
 
     this.options = {}
 
     this.options.tree = d3.tree // layout algorithm (typically d3.tree or d3.cluster)
     this.options.separation = (a, b) => (a.parent === b.parent ? 1 : 2) / a.depth
     this.options.title = d => d.data.source // given a node d, returns its hover text
-    this.options.width = Math.min(window.innerWidth, window.innerHeight) // outer width, in pixels
-    this.options.height = this.options.width // outer height, in pixels
+    this.options.width = mountEl.offsetWidth // outer width, in pixels
+    this.options.height = mountEl.offsetHeight // outer height, in pixels
     this.options.margin = Math.max(this.options.width * 0.15, 60) // shorthand for margins
     this.options.marginTop = this.options.margin // top margin, in pixels
     this.options.marginRight = this.options.margin // right margin, in pixels
@@ -208,12 +209,8 @@ class Chart {
           .on("click", function(_, d) {
             if (this !== that.activeNode) {
               that.setActiveNode(this, d)
-              d3.select(this)
-                .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0) scale(1.5)`)
             } else {
               that.setActiveNode(null, null)
-              d3.select(this)
-                .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
             }
           })
           .on("mouseover", function() {
@@ -222,7 +219,11 @@ class Chart {
               .duration(100)
               .ease(d3.easeQuadOut)
               .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0) scale(1.5)`)
-              .attr("z-index", 2)              
+              .attr("opacity", 1)
+              
+            if (that.done) {
+              d3.select(this).raise()
+            }
           })
           .on("mouseleave", function() {
             d3.select(this)
@@ -230,7 +231,6 @@ class Chart {
               .duration(100)
               .ease(d3.easeQuadOut)
               .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
-              .attr("z-index", 0)
           })
           .call(select => select.append("circle")
             .attr("r", d => (d.height * 0.35 + 4) - Math.log10(dataLength))
