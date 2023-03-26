@@ -23,7 +23,8 @@ class Wiktionary {
   static parseDefinitionRes(res, lang) {
     const parsedLang = new Language(lang).refName
 
-    const htmlTagRegex = /<.*?>/g
+    const htmlTagRegex = /(<a .*Appendix:Glossary[^>]*>)([^<]+)(<\/a>)/g
+    const hrefRegex = /href="([^(")]+)"/g
     const trimWhitespaceRegex = /^\s+|\s+$/g
 
     let allGroups = []
@@ -32,7 +33,7 @@ class Wiktionary {
       allGroups = allGroups.concat(res[group])
     }
 
-    const byPartsOfSpeech = {}
+    const byPartsOfSpeech = new Map()
 
     for (const group of allGroups) {
       const {
@@ -42,11 +43,17 @@ class Wiktionary {
       } = group
 
       if (language === parsedLang) {
-        byPartsOfSpeech[partOfSpeech] = definitions.map(({ definition }) => {
-          const parsed = definition.replace(htmlTagRegex, '')
-          const trimmed = parsed.replace(trimWhitespaceRegex, '')
-          return trimmed
-        })
+        const prevEntries = byPartsOfSpeech.get(partOfSpeech) || []
+
+        byPartsOfSpeech.set(
+          partOfSpeech,
+          prevEntries.concat(definitions.map(({ definition }) => {
+            const parsed = definition.replace(htmlTagRegex, '$2')
+            console.log(parsed)
+            const relativeToAbsolute = parsed.replace(hrefRegex, 'href="https://en.wiktionary.org$1" target="__blank" rel="noopener noreferrer"')
+            return relativeToAbsolute.replace(trimWhitespaceRegex, '')
+          }))
+        )
       }
     }
 
@@ -139,7 +146,7 @@ class Wiktionary {
     )
 
     if (filterAffixes) {
-      $etymologies = $etymologies.filter((_, domObj) => $(domObj).find('a').attr('title').match(/(^-)|(-$)/g) === null)
+      $etymologies = $etymologies.filter((_, domObj) => $(domObj).find('a').text().match(/(^-)|(-$)/g) === null)
     }
 
     const targetSource = `${new Language(langRefName).alpha3}: ${word}`
@@ -150,7 +157,8 @@ class Wiktionary {
       const $domObj = $(domObj).find('a').first()
 
       if ($domObj.length) {
-        sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
+        // sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
+        sourceTitle = $domObj.text()
       }
 
       return new ArborNode(`${new Language(domObj.lang).alpha3}: ${sourceTitle}`, targetSource, 'rel:etymological_origin_of')
@@ -163,7 +171,8 @@ class Wiktionary {
       const definitionRes = await Wiktionary.getDefinitionRes($domObjToTest.text())
       const parsedDefinitionRes = Wiktionary.parseDefinitionRes(definitionRes, $domObjToTest.attr('lang'))
       
-      if ($.isEmptyObject(parsedDefinitionRes)) {
+      if (parsedDefinitionRes.size === 0) {
+
         const $nextItem = $(domObjToTest).nextAll('i.mention:not(.e-example)').first()
 
         if ($nextItem.length) {
@@ -172,14 +181,17 @@ class Wiktionary {
           const $domObj = $nextItem.find('a').first()
     
           if ($domObj.length) {
-            sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
+            // sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
+            sourceTitle = $domObj.text()
           }
-    
-          etymologyNodes.push(new ArborNode(
-            `${new Language($nextItem.attr('lang')).alpha3}: ${sourceTitle}`,
-            `${new Language($domObjToTest.attr('lang')).alpha3}: ${$domObjToTest.text()}`,
-            'rel:etymological_origin_of'
-          ))
+
+          if (!etymologyNodes.find((existingNode) => existingNode.source === `${new Language($nextItem.attr('lang')).alpha3}: ${sourceTitle}`)) {
+            etymologyNodes.push(new ArborNode(
+              `${new Language($nextItem.attr('lang')).alpha3}: ${sourceTitle}`,
+              `${new Language($domObjToTest.attr('lang')).alpha3}: ${$domObjToTest.text()}`,
+              'rel:etymological_origin_of'
+            ))
+          }
         }
       }
     }

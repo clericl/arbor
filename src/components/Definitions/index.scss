@@ -1,1 +1,71 @@
 @use '../../styles/constants.scss' as *;
+
+.definitions {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition: opacity 0.2s ease-out;
+
+  &.hidden {
+    opacity: 0;
+  }
+  
+  .scroller {
+    padding: 0 1.5rem 0 1rem;
+    height: calc(100% + 25px);
+    width: calc(100% + 25px);
+    overflow: scroll;
+    box-sizing: border-box;
+  }
+
+  .not-found {
+    margin-top: 1rem;
+  }
+
+  .arrow {
+    transition: transform 0.1s ease-out;
+
+    &.less {
+      transform: rotate(180deg);
+    }
+  }
+
+  .part-of-speech {
+    overflow: hidden;
+  }
+
+  span {
+    vertical-align: text-top;
+  }
+
+  h2, h4 {
+    font-family: $typeface-secondary;
+  }
+
+  h2 {
+    padding: 1rem 1rem 0;
+    margin-bottom: 0;
+  }
+
+  h4 {
+    margin-top: 0;
+    padding: 0rem 1rem 1rem;
+  }
+
+  h3 {
+    color: $color-background;
+    margin: 1rem 0 0.5rem;
+    cursor: pointer;
+  }
+
+  ol {
+    margin: 0;
+    padding: 0 0 0 1.5rem;
+  }
+
+  li {
+    font-family: $typeface-secondary;
+    line-height: 1.5;
+  }
+}

@@ -52,17 +52,18 @@ class Chart {
       strokeWidth,
     } = this.options
 
+    const that = this
+
     const svg = d3.create("svg")
       .attr("viewBox", [-marginLeft - radius, -marginTop - radius, width, height])
       .attr("width", width)
       .attr("height", height)
       .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
-      .attr("font-family", "sans-serif")
+      .attr("font-size", that.options.fontSize)
+      .attr("font-family", "'Assistant', sans-serif")
 
     const g = svg.append("g")
       .attr("id", "transform")
-      .attr("font-size", this.options.fontSize)
-      .attr("font-family", "'Assistant', sans-serif")
 
     g.append("g")
       .classed("paths", true)
@@ -82,11 +83,10 @@ class Chart {
       .on("zoom", zoomed))
 
     function zoomed({ transform }) {
-      g.attr("transform", transform)
-        .attr("font-size", (this.options.fontSize / transform.k))
-      
-      svg.selectAll("g.captions")
-        .attr("stroke-width", (strokeWidth / transform.k))
+      svg.attr("transform", transform)
+        .attr("font-size", (that.options.fontSize / (Math.pow(transform.k, 0.5))))
+        .selectAll("g.captions")
+          .attr("stroke-width", (strokeWidth / transform.k))
     }
       
     this.mountEl.appendChild(svg.node())
@@ -158,11 +158,12 @@ class Chart {
     let pathLength;
     const pathTween = () => d3.interpolateNumber(pathLength, 0);
 
-    this.svg.select("#transform")
-      .transition()
+    const transform = d3.zoomTransform(this.svg.node())
+
+    this.svg.transition()
       .duration(100)
       .ease(d3.easeQuadOut)
-      .attr('font-size', this.options.fontSize)
+      .attr('font-size', this.options.fontSize / (Math.pow(transform.k, 0.5)))
 
     this.svg.select(".paths")
       .selectAll("path")
@@ -233,9 +234,9 @@ class Chart {
               .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`)
           })
           .call(select => select.append("circle")
-            .attr("r", d => (d.height * 0.35 + 4) - Math.log10(dataLength))
+            .attr("r", d => `${((d.height * 0.35 + 4) - Math.log10(dataLength)) / 8}em`)
             .attr("fill", "white")
-            .attr("stroke-width", 2)
+            .attr("stroke-width", `${0.3}em`)
             .attr("stroke", "#545454"))
           .call(enter => enter.transition(t)
             .attr("opacity", 1))
@@ -264,7 +265,7 @@ class Chart {
             .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`))
           .call(update => update.select("circle")
             .transition(t)
-            .attr("r", d => (d.height * 0.35 + 4) - Math.log10(dataLength)))
+            .attr("r", d => `${((d.height * 0.35 + 4) - Math.log10(dataLength)) / 8}em`))
           .call(update => update.select(".captions")
             .transition(t)
             .attr("text-anchor", d => ((d.x < Math.PI)) === !d.children ? "start" : "end")

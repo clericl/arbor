@@ -6,7 +6,37 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: stretch;
   padding-top: 5%;
   box-sizing: border-box;
   border-right: 1px solid $color-background;
+
+  .contents {
+    position: relative;
+    width: 100%;
+  }
+
+  .loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 2rem 0;
+    transition: opacity 0.2s ease-out;
+    z-index: 2;
+
+    &.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    img {
+      width: 65%;
+      filter: saturate(0.4);
+    }
+  }
 }

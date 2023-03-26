@@ -1,7 +1,7 @@
 import BigQuery from '../../utils/BigQuery'
 import { all, call, cancel, cancelled, delay, fork, put, select, take, takeLatest } from 'redux-saga/effects'
 import { fetchingEtymologies, fetchEtymologiesSucceeded, fetchEtymologiesFailed, fetchingDescendants, fetchDescendantsSucceeded, fetchDescendantsFailed, fetchingTree, fetchTreeSucceeded, fetchTreeFailed, savingTree, saveTreeSucceeded, saveTreeFailed, requestTree, cancelTree, treeFailed, ingestionFailed } from '../actions'
-import { clearError, finishLoading, setError, startLoading } from '../reducers/ui'
+import { clearError, setError } from '../reducers/ui'
 import Wiktionary from '../../utils/Wiktionary'
 import { addNode, resetTree, setNodes, setSource, setTreeBuilding, setTreeDone } from '../reducers/tree'
 import ArborNode from '../../utils/ArborNode'
@@ -121,7 +121,6 @@ function* fetchDescendants(node) {
 function* extendTrunk(node) {
   if (node.source.match(/#/g)) return []
 
-  const nodesInState = yield select((state) => state.tree.nodes)
   const [ancestors] = yield all([
     call(fetchEtymologies, node),
     delay(500),
@@ -130,6 +129,8 @@ function* extendTrunk(node) {
   const concatenated = [...ancestors]
 
   for (const ancestor of ancestors) {
+    const nodesInState = yield select((state) => state.tree.nodes)
+
     if (
       (node.source === ancestor.target &&
         node.target === ancestor.source) ||
@@ -173,7 +174,7 @@ function* extendBranches(node, depth = 0) {
     const serializedNode = descendant.serialize()
     yield put(addNode(serializedNode))
 
-    if (recurse && depth < 4) {
+    if (recurse && nodesInState.length < (500 / depth)) {
       const nextDescendants = yield call(extendBranches, descendant, depth + 1)
       concatenated.push(...nextDescendants)
     }
@@ -189,7 +190,6 @@ function* extendBranches(node, depth = 0) {
 function* buildTree(action) {
   if (!action.payload) return false
 
-  yield put(startLoading())
   yield put(resetTree())
   yield put(clearError())
   yield put(setTreeBuilding())
@@ -218,8 +218,6 @@ function* buildTree(action) {
       const { nodes } = yield select((state) => state.tree)
       yield call(saveTree, action.payload, nodes)
     }
-
-    yield put(setTreeDone())
   } catch (e) {
     console.warn(e)
     const errorObj = {
@@ -229,7 +227,7 @@ function* buildTree(action) {
     }
     yield put(treeFailed(errorObj))
   } finally {
-    yield put(finishLoading())
+    yield put(setTreeDone())
 
     if (yield cancelled()) {
       const errorObj = {

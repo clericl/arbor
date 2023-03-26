@@ -4,6 +4,7 @@ const wordsSlice = createSlice({
   name: 'words',
   initialState: {
     word: null,
+    loading: false,
   },
   reducers: {
     clearWord(state) {
@@ -16,6 +17,12 @@ const wordsSlice = createSlice({
         state.word = word
       }
     },
+    startLoading(state) {
+      state.loading = true
+    },
+    finishLoading(state) {
+      state.loading = false
+    },
   }
 })
 
@@ -23,6 +30,8 @@ export const {
   clearWord,
   resetOptions,
   setWord,
+  startLoading,
+  finishLoading,
 } = wordsSlice.actions
 
 export default wordsSlice.reducer
