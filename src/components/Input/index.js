@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { cancelTree, requestTree } from "../../redux/actions"
+import Status from '../Status'
 
-import iso639_1 from '../../utils/iso639-1.json'
 import iso639AllCodes from '../../utils/iso639AllCodes.json'
 import './index.scss'
 
-const langOpts = Object.values(iso639_1).sort().map((lang) => (
+const langOpts = Object.keys(iso639AllCodes).sort().map((lang) => (
   <option className="lang-option" key={lang} value={iso639AllCodes[lang].alpha3}>{lang}</option>
 ))
 
 function Input() {
   const [lang, setLang] = useState('eng')
   const [value, setValue] = useState('')
-  const { loading } = useSelector((state) => state.ui)
+  const { done } = useSelector((state) => state.tree)
   const dispatch = useDispatch()
   const ref = useRef()
 
@@ -42,10 +42,11 @@ function Input() {
 
   return (
     <div className="input">
+      <Status />
       <form className="input-form" onSubmit={handleSubmit}>
         <input
           className="input"
-          disabled={loading}
+          disabled={!done}
           onInput={handleInput}
           placeholder="Enter your word here."
           value={value}
@@ -55,9 +56,11 @@ function Input() {
           {langOpts}
         </select>
       </form>
-      {loading && (
+      {!done && (
         <button className="cancel-button" onClick={handleCancel}>
-          &times;
+          <span className="material-symbols-outlined">
+            close
+          </span>
         </button>
       )}
     </div>

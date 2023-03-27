@@ -6,15 +6,18 @@
   overflow: hidden;
   box-sizing: border-box;
   transition: opacity 0.2s ease-out;
+  padding: 1.5rem;
 
   &.hidden {
     opacity: 0;
   }
   
   .scroller {
-    padding: 0 1.5rem 0 1rem;
-    height: calc(100% + 25px);
-    width: calc(100% + 25px);
+    padding: 0 1.5rem 3rem 0;
+    // margin-bottom: 1.5rem;
+    // padding-bottom: 0;
+    width: calc(100% + 1rem + 25px);
+    height: calc(100% - 25px);
     overflow: scroll;
     box-sizing: border-box;
   }
@@ -44,13 +47,12 @@
   }
 
   h2 {
-    padding: 1rem 1rem 0;
     margin-bottom: 0;
+    margin-top: 0;
   }
 
   h4 {
     margin-top: 0;
-    padding: 0rem 1rem 1rem;
   }
 
   h3 {
@@ -67,5 +69,13 @@
   li {
     font-family: $typeface-secondary;
     line-height: 1.5;
+  }
+
+  span.maintenance-line {
+    display: none;
+  }
+
+  a {
+    color: $color-background;
   }
 }

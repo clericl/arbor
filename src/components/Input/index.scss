@@ -9,7 +9,6 @@
     overflow: visible;
     position: relative;
     z-index: 1;
-    border: 1px solid $color-background;
     border-left: none;
     border-bottom: none;
     box-sizing: border-box;
@@ -19,12 +18,15 @@
       width: 100%;
       box-sizing: border-box;
       padding: 0.5rem 1rem;
-      background-color: white;
+      background-color: rgba(255, 255, 255, 0.4);
       font-family: 'EB Garamond', serif;
       font-size: 1.5rem;
       text-align: center;
       outline: none;
       color: $color-background;
+      border-radius: $border-radius;
+      box-shadow: $box-shadow;
+      backdrop-filter: blur(8px);
       transition: all 200ms ease-out;
   
       &::placeholder {
@@ -32,28 +34,30 @@
       }
   
       &:disabled {
-        opacity: 0.5;
-        background-color: lightgray;
+        color: rgba(42, 71, 46, 0.5);
       }
     }
   
     .lang-select {
       position: absolute;
-      right: 1rem;
+      right: 0;
       top: 0;
       transform: translateY(calc(-100% - 0.25rem));
-      width: 75px;
+      width: fit-content;
       background-color: transparent;
       border: none;
       border-radius: 5px;
       font-family: $typeface-primary;
       font-size: 1rem;
       color: $color-background;
+      text-align: right;
+
+      .lang-option {
+        background-color: transparent;
+        text-align: auto;
+      }
     }
   
-    .lang-option {
-      background-color: transparent;
-    }
   }
 
   .cancel-button {
@@ -62,6 +66,24 @@
     right: 1rem;
     transform: translateY(-50%);
     z-index: 2;
+    border-radius: 100%;
+    background-color: transparent;
+    border: 1px solid $color-background;
+    cursor: pointer;
+    padding: 4px;
+
+    .material-symbols-outlined {
+      font-size: 16px;
+      vertical-align: middle;
+    }
+
+    &:hover {
+      transform: translateY(-50%);
+
+      .material-symbols-outlined {
+        font-size: 18px;
+      }
+    }
   }
 }
 

@@ -48,6 +48,10 @@ function PartOfSpeech({
     }
   }, [api, isOpenSection])
 
+  useEffect(() => {
+    api.set({ height: 0 })
+  }, [api, definitions])
+
   return (
     <div className="part-of-speech" key={partOfSpeech}>
       <h3 onClick={toggleOpenSection}>

@@ -16,7 +16,7 @@ class Language {
       } else {
         this.alpha3 = code
         this.refName = iso639_3[this.alpha3]
-        this.alpha2 = iso639AllCodes[this.refName].alpha2
+        this.alpha2 = iso639AllCodes[this.refName]?.alpha2 || this.alpha3
       }
     }
 

@@ -1,19 +1,21 @@
 import Input from "../Input"
 import Arbor from "../Arbor"
 import InformationPanel from "../InformationPanel"
-import Status from "../Status"
 
 import './index.scss'
+import Title from "../Title"
 
 function Layout() {
   return (
     <div className="layout">
-      <InformationPanel />
-      <div className="workspace">
-        <div className="chart-wrapper">
-          <Arbor />
-          <Status />
+      <Arbor />
+      <div className="top">
+        <div className="left">
+          <Title />
+          <InformationPanel />
         </div>
+      </div>
+      <div className="bottom">
         <Input />
       </div>
     </div>

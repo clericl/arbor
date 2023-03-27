@@ -49,7 +49,6 @@ class Wiktionary {
           partOfSpeech,
           prevEntries.concat(definitions.map(({ definition }) => {
             const parsed = definition.replace(htmlTagRegex, '$2')
-            console.log(parsed)
             const relativeToAbsolute = parsed.replace(hrefRegex, 'href="https://en.wiktionary.org$1" target="__blank" rel="noopener noreferrer"')
             return relativeToAbsolute.replace(trimWhitespaceRegex, '')
           }))
@@ -157,8 +156,7 @@ class Wiktionary {
       const $domObj = $(domObj).find('a').first()
 
       if ($domObj.length) {
-        // sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
-        sourceTitle = $domObj.text()
+        sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5').split(',')[0]
       }
 
       return new ArborNode(`${new Language(domObj.lang).alpha3}: ${sourceTitle}`, targetSource, 'rel:etymological_origin_of')
@@ -168,7 +166,7 @@ class Wiktionary {
     // in these cases, add the next one found
     for await (const domObjToTest of $etymologies.get()) {
       const $domObjToTest = $(domObjToTest)
-      const definitionRes = await Wiktionary.getDefinitionRes($domObjToTest.text())
+      const definitionRes = await Wiktionary.getDefinitionRes(encodeURIComponent($domObjToTest.find('a').attr('title')))
       const parsedDefinitionRes = Wiktionary.parseDefinitionRes(definitionRes, $domObjToTest.attr('lang'))
       
       if (parsedDefinitionRes.size === 0) {
@@ -181,14 +179,15 @@ class Wiktionary {
           const $domObj = $nextItem.find('a').first()
     
           if ($domObj.length) {
-            // sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')
-            sourceTitle = $domObj.text()
+            sourceTitle = $domObj.attr('title').replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5').split(',')[0]
           }
 
           if (!etymologyNodes.find((existingNode) => existingNode.source === `${new Language($nextItem.attr('lang')).alpha3}: ${sourceTitle}`)) {
+            const targetSource = $domObjToTest.find('a').attr('title') || $domObjToTest.text()
+
             etymologyNodes.push(new ArborNode(
               `${new Language($nextItem.attr('lang')).alpha3}: ${sourceTitle}`,
-              `${new Language($domObjToTest.attr('lang')).alpha3}: ${$domObjToTest.text()}`,
+              `${new Language($domObjToTest.attr('lang')).alpha3}: ${targetSource.replace(/((Reconstruction:)+(\w|\W)+){1}(\/)([\w\W]+$)/g, '*$5')}`,
               'rel:etymological_origin_of'
             ))
           }

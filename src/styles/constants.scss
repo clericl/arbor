@@ -4,10 +4,15 @@ $typeface-secondary: 'Assistant', sans-serif;
 $color-primary: #596869;
 $color-secondary: #515751;
 $color-highlight: #f5f9e9;
-$color-background: #495B4B;
+$color-background: #2a472e;
 $color-accent: #c2c1a5;
 $color-error: #8a2121;
 $color-white: white;
+
+$border-radius: 5px;
+
+$box-shadow: 2px 2px 8px 2px rgba(25, 25, 25, 0.3);
+$text-shadow: 2px 2px 4px rgba(25, 25, 25, 0.2);
 
 @mixin flex($direction: row, $justify: center, $align: center) {
   display: flex;

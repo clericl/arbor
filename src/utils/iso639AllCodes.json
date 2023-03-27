@@ -4779,6 +4779,10 @@
     "alpha2": "",
     "alpha3": "cek"
   },
+  "Gaulish": {
+    "alpha2": "",
+    "alpha3": "cel-gau"
+  },
   "Cen": {
     "alpha2": "",
     "alpha3": "cen"
@@ -27879,7 +27883,7 @@
     "alpha2": "",
     "alpha3": "wmn"
   },
-  "Wom": {
+  "Perema": {
     "alpha2": "",
     "alpha3": "wom"
   },
@@ -31406,6 +31410,10 @@
   "Proto-Caddoan": {
     "alpha2": "",
     "alpha3": "cdd-pro"
+  },
+  "Proto-Celtic": {
+    "alpha2": "",
+    "alpha3": "cel-pro"
   },
   "Proto-Chimakuan": {
     "alpha2": "",
