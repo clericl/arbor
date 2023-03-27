@@ -18,12 +18,14 @@ class Chart {
     this.options.title = d => d.data.source // given a node d, returns its hover text
     this.options.width = mountEl.offsetWidth // outer width, in pixels
     this.options.height = mountEl.offsetHeight // outer height, in pixels
-    this.options.margin = Math.max(this.options.width * 0.15, 60) // shorthand for margins
+    this.options.margin = Math.max(this.options.width * 0.1, 60) // shorthand for margins
     this.options.marginTop = this.options.margin // top margin, in pixels
     this.options.marginRight = this.options.margin // right margin, in pixels
     this.options.marginBottom = this.options.margin // bottom margin, in pixels
     this.options.marginLeft = this.options.margin // left margin, in pixels
-    this.options.radius = Math.min(this.options.width - this.options.marginLeft - this.options.marginRight, this.options.height - this.options.marginTop - this.options.marginBottom) / 2 // outer radius
+    this.options.radius = Math.min(
+      this.options.width - this.options.marginLeft - this.options.marginRight,
+      this.options.height - this.options.marginTop - this.options.marginBottom) / 2 // outer radius
     this.options.padding = 1 // horizontal padding for first and last column
     this.options.fill = "#999" // fill for nodes
     this.options.stroke = "#555" // stroke for links
@@ -55,7 +57,7 @@ class Chart {
     const that = this
 
     const svg = d3.create("svg")
-      .attr("viewBox", [(-marginLeft - radius) * 1.6, (-marginTop - radius) * 0.9, width, height])
+      .attr("viewBox", [(-marginLeft - ((this.options.width - this.options.marginLeft - this.options.marginRight) / 1.75)), (-marginTop - ((this.options.height - this.options.marginTop - this.options.marginBottom) / 2)) * 0.9, width, height])
       .attr("width", width)
       .attr("height", height)
       .attr("style", "max-width: 100%; height: auto; height: intrinsic;")

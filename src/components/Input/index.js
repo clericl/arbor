@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { cancelTree, requestTree } from "../../redux/actions"
+import { setTreeBuilding } from "../../redux/reducers/tree"
 import Status from '../Status'
+import BigQuery from "../../utils/BigQuery"
+import ArborNode from "../../utils/ArborNode"
 
 import iso639AllCodes from '../../utils/iso639AllCodes.json'
 import './index.scss'
@@ -25,10 +28,28 @@ function Input() {
     setValue(e.target.value)
   }
 
+  const handleRandom = async () => {
+    setValue('Randomizing...')
+    dispatch(setTreeBuilding())
+
+    const res = await BigQuery.getRandomSeed()
+    const randomSeed = res?.data?.[0]
+    const randomSeedNode = new ArborNode(randomSeed, null, "rel:seed")
+
+    setLang(randomSeedNode.sourceLang.alpha3)
+    setValue(randomSeedNode.sourceWord)
+
+    submit(randomSeedNode.sourceLang.alpha3, randomSeedNode.sourceWord)
+  }
+
+  const submit = (lang, value) => {
+    dispatch(requestTree(`${lang}: ${value}`))
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
 
-    dispatch(requestTree(`${lang}: ${value}`))
+    submit(lang, value)
     ref.current.blur()
   }
 
@@ -43,6 +64,11 @@ function Input() {
   return (
     <div className="input">
       <Status />
+      {done && (
+        <button className="random-button" onClick={handleRandom}>
+          Random me!
+        </button>
+      )}
       <form className="input-form" onSubmit={handleSubmit}>
         <input
           className="input"

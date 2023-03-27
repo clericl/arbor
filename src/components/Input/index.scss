@@ -71,18 +71,33 @@
     border: 1px solid $color-background;
     cursor: pointer;
     padding: 4px;
-
+    transition: all 0.1s ease-out;
+  
     .material-symbols-outlined {
       font-size: 16px;
       vertical-align: middle;
     }
 
     &:hover {
-      transform: translateY(-50%);
+      background-color: rgba(0, 0, 0, 0.2);
+    }
+  }
 
-      .material-symbols-outlined {
-        font-size: 18px;
-      }
+  .random-button {
+    border: none;
+    font-family: $typeface-primary;
+    color: $color-background;
+    background-color: transparent;
+    position: absolute;
+    font-size: 1rem;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, calc(-100% - 0.25rem));
+    cursor: pointer;
+    transition: all 0.1s ease-out;
+
+    &:hover {
+      font-size: 1.1rem;
     }
   }
 }

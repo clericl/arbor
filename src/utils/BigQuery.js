@@ -1,4 +1,10 @@
 class BigQuery {
+  static async getRandomSeed(limit = 1) {
+    const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/random/' + limit)
+    const body = await res.json()
+    return body
+  }
+
   static async fetchTree(source){
     const res = await fetch(process.env.REACT_APP_API_ENDPOINT + '/trees/' + source)
     const body = await res.json()
