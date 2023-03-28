@@ -6,10 +6,11 @@
 import * as d3 from 'd3'
 
 class Chart {
-  constructor(mountEl, selectNode, done) {
+  constructor(mountEl, selectNode, done, loadFromMemory) {
     this.mountEl = mountEl
     this.selectNode = selectNode
     this.done = done
+    this.loadFromMemory = loadFromMemory
 
     this.options = {}
 
@@ -30,7 +31,7 @@ class Chart {
     this.options.fill = "#999" // fill for nodes
     this.options.stroke = "#555" // stroke for links
     this.options.strokeWidth = 1 // stroke width for links
-    this.options.strokeOpacity = 1 // stroke opacity for links
+    this.options.strokeOpacity = 0.8 // stroke opacity for links
     this.options.halo = "transparent" // color of label halo 
     this.options.haloWidth = 3 // padding around the labels
     this.options.fontSize = this.options.width / 50
@@ -42,7 +43,6 @@ class Chart {
 
   initTree() {
     const {
-      radius,
       marginLeft,
       marginTop,
       width,
@@ -57,7 +57,12 @@ class Chart {
     const that = this
 
     const svg = d3.create("svg")
-      .attr("viewBox", [(-marginLeft - ((this.options.width - this.options.marginLeft - this.options.marginRight) / 1.75)), (-marginTop - ((this.options.height - this.options.marginTop - this.options.marginBottom) / 2)) * 0.9, width, height])
+      .attr("viewBox", [
+        (-marginLeft - ((this.options.width - this.options.marginLeft - this.options.marginRight) / 1.75)),
+        (-marginTop - ((this.options.height - this.options.marginTop - this.options.marginBottom) / 2.33)),
+        width,
+        height
+      ])
       .attr("width", width)
       .attr("height", height)
       .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
@@ -87,8 +92,9 @@ class Chart {
     function zoomed({ transform }) {
       svg.attr("transform", transform)
         .attr("font-size", (that.options.fontSize / (Math.pow(transform.k, 0.5))))
-        .selectAll("g.captions")
-          .attr("stroke-width", (strokeWidth / transform.k))
+
+      g.select(".paths")
+        .attr("stroke-width", (strokeWidth / transform.k))
     }
       
     this.mountEl.appendChild(svg.node())
@@ -183,7 +189,7 @@ class Chart {
           .call(path => path.transition(t)
             .attr("stroke", "black")
             .attrTween("stroke-dashoffset", pathTween)
-            .delay((d, i) => i * 20)
+            .delay((d, i) => that.loadFromMemory ? (i * 20) : 0)
           ),
         update => update
           .attr("stroke", "black")
@@ -242,7 +248,7 @@ class Chart {
             .attr("stroke-width", `${0.2}em`)
             .attr("stroke", "#2a472e"))
           .call(enter => enter.transition(t)
-            .delay((d, i) => i * 20)
+            .delay((d, i) => that.loadFromMemory ? (i * 20) : 0)
             .attr("opacity", 1))
           .append("g")
             .classed("captions", true)
@@ -256,17 +262,18 @@ class Chart {
             .call(select => select.append("text")
               .classed("source", true)
               .attr("font-size", "1em")
-              .attr("x", d => ((d.height / 3) + 8) * ((d.x < Math.PI) === !d.children ? 1 : -1))
+              .attr("x", d => `${(((d.height * 0.2 + 5) - Math.log10(dataLength)) / 8) * ((d.x < Math.PI) === !d.children ? 1 : -1)}em`)
               .text(d => d.data.sourceWord))
             .call(select => select.append("text")
               .classed("lang", true)
-              .attr("y", "1.2em")
-              .attr("x", d => ((d.height / 3) + 8) * ((d.x < Math.PI) === !d.children ? 1 : -1))
-              .attr("font-size", "0.75em")
+              .attr("y", "1em")
+              .attr("x", d => `${(((d.height * 0.2 + 7) - Math.log10(dataLength)) / 8) * ((d.x < Math.PI) === !d.children ? 1 : -1)}em`)
+              .attr("font-size", "0.7em")
               .text(d => d.data.sourceLang.refName)),
         update => update
           .call(update => update.transition(t)
             .attr("transform", d => `rotate(${d.x * 180 / Math.PI - 90}) translate(${d.y},0)`))
+            .attr("opacity", 1)
           .call(update => update.select("circle")
             .transition(t)
             .attr("r", d => `${((d.height * 0.35 + 4) - Math.log10(dataLength)) / 8}em`))
@@ -277,11 +284,11 @@ class Chart {
             .attr("transform", d => d.height ? `rotate(${90 - (180 * d.x / Math.PI)})` : `rotate(${d.x >= Math.PI ? 180 : 0})`))
           .call(select => select.select(".source")
             .transition(t)
-            .attr("x", d => ((d.height / 3) + 8) * ((d.x < Math.PI) === !d.children ? 1 : -1)))
+            .attr("x", d => `${(((d.height * 0.2 + 5) - Math.log10(dataLength)) / 8) * ((d.x < Math.PI) === !d.children ? 1 : -1)}em`))
           .call(select => select.select(".lang")
             .transition(t)
-            .attr("y", "1.2em")
-            .attr("x", d => ((d.height / 3) + 8) * ((d.x < Math.PI) === !d.children ? 1 : -1))),
+            .attr("y", "1em")
+            .attr("x", d => `${(((d.height * 0.2 + 7) - Math.log10(dataLength)) / 8) * ((d.x < Math.PI) === !d.children ? 1 : -1)}em`)),
         exit => exit.call(exit => exit.transition(t)
           .attr("opacity", 0)
           .remove()))

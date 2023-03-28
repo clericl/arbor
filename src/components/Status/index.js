@@ -5,7 +5,8 @@ import './index.scss'
 
 function Status() {
   const { done, source } = useSelector((state) => state.tree)
-  const { error } = useSelector((state) => state)
+  const { error } = useSelector((state) => state.ui)
+  const { loading } = useSelector((state) => state.words)
 
   return (
     <div className={classNames('status', { error })}>

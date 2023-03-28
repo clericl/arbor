@@ -174,7 +174,7 @@ function* extendBranches(node, depth = 0) {
     const serializedNode = descendant.serialize()
     yield put(addNode(serializedNode))
 
-    if (!descendant.source.match(/\b-|-\b/g) && nodesInState.length < (200 / depth)) continue;
+    if (!descendant.source.match(/\b-|-\b/g)) continue;
 
     if (recurse) {
       const nextDescendants = yield call(extendBranches, descendant, depth + 1)

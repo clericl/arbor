@@ -115,7 +115,7 @@ function Definitions() {
   }, [dispatch, wordNode])
 
   return (
-    <div className={`definitions ${(loading || !done) ? "hidden" : ""}`}>
+    <div className="definitions">
       {wordNode && (
         <>
           <h2>{wordNode.sourceWord}</h2>

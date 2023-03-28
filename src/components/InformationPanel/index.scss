@@ -1,8 +1,8 @@
 @use '../../styles/constants.scss' as *;
 
 .information-panel {
-  height: 55vh;
-  width: 300px;
+  max-height: calc(75vh - 45px);
+  width: 250px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -12,7 +12,63 @@
   background-color: rgba(255, 255, 255, 0.4);
   box-shadow: 2px 2px 8px 2px rgba(25, 25, 25, 0.3);
   z-index: 3;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(4px);
+  transition: all 0.1s ease-out;
+  opacity: 0;
+  pointer-events: none;
+
+  &.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .info-hover {
+    color: $color-background;
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    cursor: default;
+    opacity: 0;
+    transition: all 0.1s ease-out;
+    pointer-events: none;
+    z-index: 3;
+    
+    &.show {
+      opacity: 1;
+      pointer-events: all;
+
+      &:hover {
+        transform: scale(1.1);
+      }
+    }
+
+    span {
+      vertical-align: bottom;
+      font-size: 1.25rem;
+    }
+  }
+
+  .info-content {
+    transition: all 0.1s ease-out;
+    padding: 1rem;
+    box-sizing: border-box;
+    
+    &.absolute {
+      opacity: 0;
+      pointer-events: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 100%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+
+      &.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+    }
+  }
 
   .contents {
     position: relative;
@@ -40,8 +96,17 @@
 
     img {
       width: 65%;
-      filter: saturate(0.4);
+      filter: saturate(0.4) brightness(0.5);
       margin-bottom: 2rem;
+    }
+  }
+
+  .definitions-container {
+    height: 100%;
+    transition: all 0.1s ease-out;
+
+    &.hidden {
+      opacity: 0;
     }
   }
 }

@@ -2,6 +2,10 @@
 
 .input {
   position: relative;
+  background-color: rgba(255, 255, 255, 0.4);
+  box-shadow: $box-shadow;
+  backdrop-filter: blur(4px);
+  border-radius: $border-radius;
 
   .input-form {
     width: 100%;
@@ -12,22 +16,72 @@
     border-left: none;
     border-bottom: none;
     box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+
+    .input-box-container {
+      width: 50%;
+      position: relative;
+
+      .search-button-container {
+        height: 100%;
+        width: 2rem;
+        position: absolute;
+        right: 0.5rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+
+        &::before {
+          content: '';
+          position: absolute;
+          border-left: 1px solid rgba(42, 71, 46, 0.4);
+          left: -0.5rem;
+          top: 50%;
+          height: 60%;
+          transform: translateY(-50%);
+        }
+
+        span {
+          color: $color-background;
+          transition: color 0.2s ease-out;
+
+          &:hover {
+            font-size: 1.7rem;
+          }
+        }
+
+        &.disabled {
+          cursor: default;
+
+          span {
+            color: rgba(0, 0, 0, 0.4);
+
+            &:hover {
+              font-size: 1.5rem;
+            }
+          }
+        }
+      }
+    }
     
-    .input {
-      border: none;
+    .input-box {
       width: 100%;
+      border: none;
       box-sizing: border-box;
       padding: 0.5rem 1rem;
-      background-color: rgba(255, 255, 255, 0.4);
       font-family: 'EB Garamond', serif;
       font-size: 1.5rem;
       text-align: center;
       outline: none;
       color: $color-background;
-      border-radius: $border-radius;
-      box-shadow: $box-shadow;
-      backdrop-filter: blur(8px);
       transition: all 200ms ease-out;
+      border-left: 1px solid $color-background;
+      border-right: 1px solid $color-background;
+      background-color: rgba(255, 255, 255, 0.5);
   
       &::placeholder {
         color: $color-background;

@@ -2,9 +2,10 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const defaultOptions = {
   lang: 'English',
-  descendantsLimit: 10,
+  descendantsLimit: 25,
   filterHomographs: true,
   recurse: true,
+  loadFromMemory: false,
 }
 
 const treeSlice = createSlice({

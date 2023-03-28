@@ -48,8 +48,8 @@ class Wiktionary {
         byPartsOfSpeech.set(
           partOfSpeech,
           prevEntries.concat(definitions.map(({ definition }) => {
-            const parsed = definition.replace(htmlTagRegex, '$2')
-            const relativeToAbsolute = parsed.replace(hrefRegex, 'href="https://en.wiktionary.org$1" target="__blank" rel="noopener noreferrer"')
+            // const parsed = definition.replace(htmlTagRegex, '$2')
+            const relativeToAbsolute = definition.replace(hrefRegex, 'href="https://en.wiktionary.org$1" target="__blank" rel="noopener noreferrer"')
             return relativeToAbsolute.replace(trimWhitespaceRegex, '')
           }))
         )

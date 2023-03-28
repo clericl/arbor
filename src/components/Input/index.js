@@ -8,6 +8,7 @@ import ArborNode from "../../utils/ArborNode"
 
 import iso639AllCodes from '../../utils/iso639AllCodes.json'
 import './index.scss'
+import classNames from "classnames"
 
 const langOpts = Object.keys(iso639AllCodes).sort().map((lang) => (
   <option className="lang-option" key={lang} value={iso639AllCodes[lang].alpha3}>{lang}</option>
@@ -70,14 +71,21 @@ function Input() {
         </button>
       )}
       <form className="input-form" onSubmit={handleSubmit}>
-        <input
-          className="input"
-          disabled={!done}
-          onInput={handleInput}
-          placeholder="Enter your word here."
-          value={value}
-          ref={ref}
-        />
+        <div className="input-box-container">
+          <input
+            className="input-box"
+            disabled={!done}
+            onInput={handleInput}
+            placeholder="Enter a word"
+            value={value}
+            ref={ref}
+          />
+          <div className={classNames('search-button-container', { disabled: !value })} onClick={handleSubmit}>
+            <span className="material-symbols-outlined">
+              search
+            </span>
+          </div>
+        </div>
         <select className="lang-select" value={lang} onChange={handleChange}>
           {langOpts}
         </select>
