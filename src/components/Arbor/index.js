@@ -1,3 +1,4 @@
+import classNames from "classnames"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
 import { ingestionFailed } from "../../redux/actions"
@@ -10,6 +11,7 @@ import './index.scss'
 function Arbor() {
   const [chartInit, setChartInit] = useState(false)
   const [data, setData] = useState([])
+  const { showInitialMessage } = useSelector((state) => state.ui)
 
   const { done, nodes, source } = useSelector((state) => state.tree)
 
@@ -74,7 +76,23 @@ function Arbor() {
   
 
   return (
-    <div className="arbor-chart" ref={nodeRef}></div>
+    <>
+      <div className={classNames('arbor-chart', { hidden: showInitialMessage })} ref={nodeRef}></div>
+      <div className={classNames('initial-message', { hidden: !showInitialMessage })}>
+        <span>
+          This is Arbor, a tool to visualize word etymology.
+        </span>
+        <span>
+          Enter a word below to see its ancestors and other connected words.
+        </span>
+        <span>
+          Use the language selector to the bottom left to search for words from around the world.
+        </span>
+        <span>
+          Not sure what word to pick? Go random!
+        </span>
+      </div>
+    </>
   )
 }
 

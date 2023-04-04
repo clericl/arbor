@@ -20,8 +20,9 @@
     justify-content: center;
 
     .input-box-container {
-      width: 50%;
+      flex: 2;
       position: relative;
+
 
       .search-button-container {
         height: 100%;
@@ -79,79 +80,134 @@
       outline: none;
       color: $color-background;
       transition: all 200ms ease-out;
-      border-left: 1px solid $color-background;
-      border-right: 1px solid $color-background;
+      border-left: 1px solid rgba(0, 0, 0, 0.4);
+      border-right: 1px solid rgba(0, 0, 0, 0.4);
       background-color: rgba(255, 255, 255, 0.5);
   
       &::placeholder {
         color: $color-background;
+      }
+
+      &:focus {
+        &::placeholder {
+          color: rgba(42, 71, 46, 0.5)
+        }
       }
   
       &:disabled {
         color: rgba(42, 71, 46, 0.5);
       }
     }
-  
-    .lang-select {
+  }
+
+  .cancel-button-container {
+    height: 100%;
+    width: 2rem;
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+
+    &::before {
+      content: '';
       position: absolute;
-      right: 0;
-      top: 0;
-      transform: translateY(calc(-100% - 0.25rem));
-      width: fit-content;
+      border-left: 1px solid rgba(42, 71, 46, 0.4);
+      left: -0.5rem;
+      top: 50%;
+      height: 60%;
+      transform: translateY(-50%);
+    }
+
+    span {
+      color: $color-background;
+      transition: color 0.2s ease-out;
+
+      &:hover {
+        font-size: 1.7rem;
+      }
+    }
+  }
+
+  .lang-select-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    transition: all 0.2s ease-out;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    .lang-select {
       background-color: transparent;
       border: none;
       border-radius: 5px;
       font-family: $typeface-primary;
-      font-size: 1rem;
+      font-size: 1.1rem;
+      width: calc(100% - 2rem);
+      height: 100%;
       color: $color-background;
-      text-align: right;
+      display: flex;
+      align-items: center;
 
       .lang-option {
         background-color: transparent;
         text-align: auto;
       }
     }
-  
   }
 
-  .cancel-button {
-    position: absolute;
-    top: 50%;
-    right: 1rem;
-    transform: translateY(-50%);
-    z-index: 2;
-    border-radius: 100%;
-    background-color: transparent;
-    border: 1px solid $color-background;
-    cursor: pointer;
-    padding: 4px;
-    transition: all 0.1s ease-out;
-  
-    .material-symbols-outlined {
-      font-size: 16px;
-      vertical-align: middle;
-    }
+  .random-button-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
 
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.2);
-    }
-  }
-
-  .random-button {
-    border: none;
-    font-family: $typeface-primary;
-    color: $color-background;
-    background-color: transparent;
-    position: absolute;
-    font-size: 1rem;
-    top: 0;
-    left: 50%;
-    transform: translate(-50%, calc(-100% - 0.25rem));
-    cursor: pointer;
-    transition: all 0.1s ease-out;
-
-    &:hover {
+    .random-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      border: none;
+      font-family: $typeface-primary;
+      color: $color-background;
+      background-color: transparent;
       font-size: 1.1rem;
+      padding: 0 1rem;
+      width: 100%;
+      cursor: pointer;
+      transition: all 0.1s ease-out;
+  
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+
+      span {
+        margin-right: 0.5rem;
+      }
+    }
+  }
+
+  .initial-message-hover {
+    color: $color-background;
+    position: absolute;
+    top: -0.5rem;
+    right: 0;
+    cursor: default;
+    transition: all 0.1s ease-out;
+    z-index: 3;
+    transform: translateY(-100%);
+    
+    &:hover {
+      transform: translateY(-100%) scale(1.1);
+    }
+
+    span {
+      vertical-align: bottom;
+      font-size: 1.25rem;
     }
   }
 }

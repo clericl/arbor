@@ -11,8 +11,34 @@
   align-items: center;
   overflow: hidden;
   filter: drop-shadow(32px 32px 4px rgba(0, 0, 0, 0.2));
+  transition: all 0.2s ease-out;
+
+  &.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
 
   a {
     cursor: pointer;
+  }
+}
+
+.initial-message {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  line-height: 2;
+  font-size: 1.2rem;
+  color: $color-background;
+  transition: all 0.2s ease-out;
+
+  &.hidden {
+    opacity: 0;
+    pointer-events: none;
   }
 }

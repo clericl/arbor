@@ -46,7 +46,7 @@ function PartOfSpeech({
         to: { height: 0 }
       })
     }
-  }, [api, isOpenSection])
+  }, [api, definitions, isOpenSection])
 
   useEffect(() => {
     api.set({ height: 0 })
@@ -69,8 +69,6 @@ function Definitions() {
   const [data, setData] = useState(new Map())
   const [openSection, setOpenSection] = useState('')
   const { word } = useSelector((state) => state.words)
-  const { loading } = useSelector((state) => state.words)
-  const { done } = useSelector((state) => state.tree)
   const wordNode = useMemo(() => word ? new ArborNode(word, null, "rel:seed") : null, [word])
   const dispatch = useDispatch()
 

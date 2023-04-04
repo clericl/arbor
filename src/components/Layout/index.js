@@ -4,6 +4,7 @@ import InformationPanel from "../InformationPanel"
 
 import './index.scss'
 import Title from "../Title"
+import Footer from "../Footer"
 
 function Layout() {
   return (
@@ -17,6 +18,7 @@ function Layout() {
       </div>
       <div className="bottom">
         <Input />
+        <Footer />
       </div>
     </div>
   )

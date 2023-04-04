@@ -31415,6 +31415,10 @@
     "alpha2": "",
     "alpha3": "cel-pro"
   },
+  "Proto-Bryonthic": {
+    "alpha2": "",
+    "alpha3": "cel-bry-pro"
+  },
   "Proto-Chimakuan": {
     "alpha2": "",
     "alpha3": "chi-pro"
@@ -31606,6 +31610,10 @@
   "Proto-Italic": {
     "alpha2": "",
     "alpha3": "itc-pro"
+  },
+  "Old Latin": {
+    "alpha2": "",
+    "alpha3": "itc-ola"
   },
   "Proto-Japonic": {
     "alpha2": "",

@@ -9,6 +9,7 @@ import ArborNode from "../../utils/ArborNode"
 import iso639AllCodes from '../../utils/iso639AllCodes.json'
 import './index.scss'
 import classNames from "classnames"
+import { clearInitialMessage, showInitialMessage } from "../../redux/reducers/ui"
 
 const langOpts = Object.keys(iso639AllCodes).sort().map((lang) => (
   <option className="lang-option" key={lang} value={iso639AllCodes[lang].alpha3}>{lang}</option>
@@ -17,7 +18,7 @@ const langOpts = Object.keys(iso639AllCodes).sort().map((lang) => (
 function Input() {
   const [lang, setLang] = useState('eng')
   const [value, setValue] = useState('')
-  const { done } = useSelector((state) => state.tree)
+  const { done, source } = useSelector((state) => state.tree)
   const dispatch = useDispatch()
   const ref = useRef()
 
@@ -29,7 +30,17 @@ function Input() {
     setValue(e.target.value)
   }
 
-  const handleRandom = async () => {
+  const handleMouseOver = () => {
+    dispatch(showInitialMessage())
+  }
+
+  const handleMouseLeave = () => {
+    dispatch(clearInitialMessage())
+  }
+
+  const handleRandom = async (e) => {
+    e.preventDefault()
+    
     setValue('Randomizing...')
     dispatch(setTreeBuilding())
 
@@ -65,12 +76,17 @@ function Input() {
   return (
     <div className="input">
       <Status />
-      {done && (
-        <button className="random-button" onClick={handleRandom}>
-          Random me!
-        </button>
-      )}
       <form className="input-form" onSubmit={handleSubmit}>
+        <div className="lang-select-container">
+          <select
+            className="lang-select"
+            disabled={!done}
+            value={lang}
+            onChange={handleChange}
+          >
+            {langOpts}
+          </select>
+        </div>
         <div className="input-box-container">
           <input
             className="input-box"
@@ -80,22 +96,39 @@ function Input() {
             value={value}
             ref={ref}
           />
-          <div className={classNames('search-button-container', { disabled: !value })} onClick={handleSubmit}>
+          {done ? (
+            <div className={classNames('search-button-container', { disabled: !value })} onClick={handleSubmit}>
+              <span className="material-symbols-outlined">
+                search
+              </span>
+            </div>
+          ) : (
+            <div className="cancel-button-container" onClick={handleCancel}>
+              <span className="material-symbols-outlined">
+                close
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="random-button-container">
+          <div className="random-button" onClick={handleRandom}>
             <span className="material-symbols-outlined">
-              search
+              magic_exchange
             </span>
+            Random me!
           </div>
         </div>
-        <select className="lang-select" value={lang} onChange={handleChange}>
-          {langOpts}
-        </select>
       </form>
-      {!done && (
-        <button className="cancel-button" onClick={handleCancel}>
+      {source && (
+        <div
+          className="initial-message-hover"
+          onMouseOver={handleMouseOver}
+          onMouseLeave={handleMouseLeave}
+        >
           <span className="material-symbols-outlined">
-            close
+            info
           </span>
-        </button>
+        </div>
       )}
     </div>
   )

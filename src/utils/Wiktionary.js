@@ -23,7 +23,7 @@ class Wiktionary {
   static parseDefinitionRes(res, lang) {
     const parsedLang = new Language(lang).refName
 
-    const htmlTagRegex = /(<a .*Appendix:Glossary[^>]*>)([^<]+)(<\/a>)/g
+    // const htmlTagRegex = /(<a .*Appendix:Glossary[^>]*>)([^<]+)(<\/a>)/g
     const hrefRegex = /href="([^(")]+)"/g
     const trimWhitespaceRegex = /^\s+|\s+$/g
 

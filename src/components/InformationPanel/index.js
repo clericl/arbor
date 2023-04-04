@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import classNames from 'classnames'
 import { clearWord } from '../../redux/reducers/words'
 import Definitions from '../Definitions'
 
 import bookLoading from '../../assets/book-loading.gif'
 import './index.scss'
-import classNames from 'classnames'
 
 function InformationPanel() {
   const [showInfo, setShowInfo] = useState(false)
@@ -44,11 +44,11 @@ function InformationPanel() {
             open: showInfo,
           }
         )}>
-          Click on a node to view details and definitions for the associated word.
+          Click on a node to view details and definitions for that word.
         </div>
         {word && (
           <>
-            <div className={`loader ${(loading) ? '' : 'hidden'}`}>
+            <div className={classNames('loader', { hidden: !loading })}>
               <img src={bookLoading} alt="loading definitions" />
             </div>
             <div className={`definitions-container ${showInfo ? 'hidden' : ''}`}>

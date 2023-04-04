@@ -1,7 +1,7 @@
 import BigQuery from '../../utils/BigQuery'
 import { all, call, cancel, cancelled, delay, fork, put, select, take, takeLatest } from 'redux-saga/effects'
 import { fetchingEtymologies, fetchEtymologiesSucceeded, fetchEtymologiesFailed, fetchingDescendants, fetchDescendantsSucceeded, fetchDescendantsFailed, fetchingTree, fetchTreeSucceeded, fetchTreeFailed, savingTree, saveTreeSucceeded, saveTreeFailed, requestTree, cancelTree, treeFailed, ingestionFailed } from '../actions'
-import { clearError, setError } from '../reducers/ui'
+import { clearError, clearInitialMessage, setError } from '../reducers/ui'
 import Wiktionary from '../../utils/Wiktionary'
 import { addNode, resetTree, setNodes, setSource, setTreeBuilding, setTreeDone } from '../reducers/tree'
 import ArborNode from '../../utils/ArborNode'
@@ -191,6 +191,12 @@ function* extendBranches(node, depth = 0) {
  */
 function* buildTree(action) {
   if (!action.payload) return false
+
+  const { showInitialMessage } = yield select((state) => state.ui)
+
+  if (showInitialMessage) {
+    yield put(clearInitialMessage())
+  }
 
   yield put(resetTree())
   yield put(clearError())

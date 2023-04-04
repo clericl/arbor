@@ -1,0 +1,29 @@
+@use '../../styles/constants.scss' as *;
+
+.footer {
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  height: 45px;
+  font-size: 0.9rem;
+
+  .icons {
+    margin-left: 0.5rem;
+  }
+
+  .icon {
+    border: none;
+    background-color: transparent;
+    width: 20px;
+    padding: 0;
+    cursor: pointer;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+
+    img {
+      width: 100%;
+    }
+  }
+}
