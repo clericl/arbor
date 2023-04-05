@@ -16,7 +16,7 @@ jobs:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
       - name: checkout
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
 
       - name: use node.js
         uses: actions/setup-node@v3
@@ -31,8 +31,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      - run: npm ci
-      - run: npm run build
+      - name: install dependencies
+        run: npm ci
+
+      - name: build files
+        run: npm run build
 
       - name: deploy
         uses: peaceiris/actions-gh-pages@v3
