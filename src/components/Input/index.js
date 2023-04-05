@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react"
+import classNames from "classnames"
 import { useDispatch, useSelector } from "react-redux"
 import { cancelTree, requestTree } from "../../redux/actions"
 import { setTreeBuilding } from "../../redux/reducers/tree"
+import { clearInitialMessage, showInitialMessage } from "../../redux/reducers/ui"
 import Status from '../Status'
 import BigQuery from "../../utils/BigQuery"
 import ArborNode from "../../utils/ArborNode"
 
 import iso639AllCodes from '../../utils/iso639AllCodes.json'
 import './index.scss'
-import classNames from "classnames"
-import { clearInitialMessage, showInitialMessage } from "../../redux/reducers/ui"
 
 const langOpts = Object.keys(iso639AllCodes).sort().map((lang) => (
   <option className="lang-option" key={lang} value={iso639AllCodes[lang].alpha3}>{lang}</option>
@@ -77,7 +77,7 @@ function Input() {
     <div className="input">
       <Status />
       <form className="input-form" onSubmit={handleSubmit}>
-        <div className="lang-select-container">
+        <div className={classNames('lang-select-container', { disabled: !done })}>
           <select
             className="lang-select"
             disabled={!done}
@@ -111,7 +111,7 @@ function Input() {
           )}
         </div>
         <div className="random-button-container">
-          <div className="random-button" onClick={handleRandom}>
+          <div className={classNames('random-button', { disabled: !done })} onClick={handleRandom}>
             <span className="material-symbols-outlined">
               magic_exchange
             </span>
