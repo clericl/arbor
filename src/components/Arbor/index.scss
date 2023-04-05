@@ -36,6 +36,7 @@
   font-size: 1.2rem;
   color: $color-background;
   transition: all 0.2s ease-out;
+  width: max-content;
 
   &.hidden {
     opacity: 0;
