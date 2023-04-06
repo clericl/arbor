@@ -32,11 +32,15 @@
       position: relative;
       display: flex;
       background-color: rgba(255, 255, 255, 0.5);
+      border-left: 1px solid rgba(0, 0, 0, 0.4);
+      border-right: 1px solid rgba(0, 0, 0, 0.4);
 
       @include media($break-sm) {
         width: 100%;
         flex: auto;
         order: 2;
+        border-left: none;
+        border-right: none;
         border-top: 1px solid rgba(42, 71, 46, 0.4);
       }
     }
@@ -51,14 +55,8 @@
       outline: none;
       color: $color-background;
       transition: all 200ms ease-out;
-      border-left: 1px solid rgba(0, 0, 0, 0.4);
-      border-right: 1px solid rgba(0, 0, 0, 0.4);
       background-color: transparent;
-      
-      @include media($break-sm) {
-        width: 100%;
-        border: none;
-      }
+      width: 100%;
   
       &::placeholder {
         color: $color-background;
@@ -77,11 +75,27 @@
   }
 
   .search-bar-button-container {
+    position: relative;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
+    width: 3rem;
+
+    @include media($break-sm) {
+      width: auto;
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      border-left: 1px solid rgba(42, 71, 46, 0.4);
+      left: 0;
+      top: 50%;
+      height: 60%;
+      transform: translateY(-50%);
+    }
 
     span {
       color: $color-background;
