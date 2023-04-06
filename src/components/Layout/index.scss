@@ -36,6 +36,11 @@
     flex-direction: column;
     width: calc(100% - (2 * 45px));
     padding: 45px 45px 0;
+
+    @include media($break-sm) {
+      padding: 0;
+      width: 100%;
+    }
   }
   
   .left {
@@ -46,6 +51,11 @@
     height: 100%;
     width: 250px;
     margin: 0 45px;
+
+    @include media($break-sm) {
+      width: 100%;
+      margin: 0 15px;
+    }
   }
   
   .chart-wrapper {

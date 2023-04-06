@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react"
 import classNames from "classnames"
 import { useDispatch, useSelector } from "react-redux"
+import { useMediaQuery } from "../../utils/useMediaQuery.ts"
 import { cancelTree, requestTree } from "../../redux/actions"
 import { setTreeBuilding } from "../../redux/reducers/tree"
-import { clearInitialMessage, showInitialMessage } from "../../redux/reducers/ui"
+import { clearInitialMessage, showInitialMessage as showInitialMessageFn } from "../../redux/reducers/ui"
 import Status from '../Status'
 import BigQuery from "../../utils/BigQuery"
 import ArborNode from "../../utils/ArborNode"
@@ -15,12 +16,26 @@ const langOpts = Object.keys(iso639AllCodes).sort().map((lang) => (
   <option className="lang-option" key={lang} value={iso639AllCodes[lang].alpha3}>{lang}</option>
 ))
 
+const RandomButton = ({ done, handleRandom }) => (
+  <div className={classNames('random-button-container', { disabled: !done })}>
+    <div className="random-button" onClick={handleRandom}>
+      <span className="material-symbols-outlined">
+        magic_exchange
+      </span>
+      Random me!
+    </div>
+  </div>
+)
+
 function Input() {
   const [lang, setLang] = useState('eng')
   const [value, setValue] = useState('')
   const { done, source } = useSelector((state) => state.tree)
+  const { showInitialMessage } = useSelector((state) => state.ui)
   const dispatch = useDispatch()
   const ref = useRef()
+
+  const isDesktop = useMediaQuery('(min-width:768px)')
 
   const handleChange = (e) => {
     setLang(e.target.value)
@@ -30,12 +45,22 @@ function Input() {
     setValue(e.target.value)
   }
 
+  const handleClick = () => {
+    if (!isDesktop) {
+      dispatch(showInitialMessage ? clearInitialMessage() : showInitialMessageFn())
+    }
+  }
+
   const handleMouseOver = () => {
-    dispatch(showInitialMessage())
+    if (isDesktop) {
+      dispatch(showInitialMessageFn())
+    }
   }
 
   const handleMouseLeave = () => {
-    dispatch(clearInitialMessage())
+    if (isDesktop) {
+      dispatch(clearInitialMessage())
+    }
   }
 
   const handleRandom = async (e) => {
@@ -96,34 +121,34 @@ function Input() {
             value={value}
             ref={ref}
           />
-          {done ? (
-            <div className={classNames('search-button-container', { disabled: !value })} onClick={handleSubmit}>
+          <div
+            className={classNames('search-bar-button-container', { disabled: done && !value })}
+            onClick={done ? handleSubmit : handleCancel}
+          >
+            {done ? (
               <span className="material-symbols-outlined">
                 search
               </span>
-            </div>
-          ) : (
-            <div className="cancel-button-container" onClick={handleCancel}>
+            ) : (
               <span className="material-symbols-outlined">
                 close
               </span>
-            </div>
-          )}
-        </div>
-        <div className="random-button-container">
-          <div className={classNames('random-button', { disabled: !done })} onClick={handleRandom}>
-            <span className="material-symbols-outlined">
-              magic_exchange
-            </span>
-            Random me!
+            )}
           </div>
+          {!isDesktop && (
+            <RandomButton done={done} handleRandom={handleRandom} />
+          )}    
         </div>
+        {isDesktop && (
+          <RandomButton done={done} handleRandom={handleRandom} />
+        )}
       </form>
       {source && (
         <div
           className="initial-message-hover"
           onMouseOver={handleMouseOver}
           onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
         >
           <span className="material-symbols-outlined">
             info

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useMediaQuery } from '../../utils/useMediaQuery.ts'
 import classNames from 'classnames'
 import { clearWord } from '../../redux/reducers/words'
 import Definitions from '../Definitions'
@@ -9,16 +10,33 @@ import './index.scss'
 
 function InformationPanel() {
   const [showInfo, setShowInfo] = useState(false)
+  const [boxOpen, setBoxOpen] = useState(true)
   const { loading, word } = useSelector((state) => state.words)
   const { source } = useSelector((state) => state.tree)
   const dispatch = useDispatch()
 
+  const isDesktop = useMediaQuery('(min-width:768px)')
+
   const handleMouseOver = () => {
-    setShowInfo(true)
+    if (isDesktop) {
+      setShowInfo(true)
+    }
   }
 
   const handleMouseLeave = () => {
-    setShowInfo(false)
+    if (isDesktop) {
+      setShowInfo(false)
+    }
+  }
+
+  const handleClick = () => {
+    if (!isDesktop) {
+      setShowInfo(!showInfo)
+    }
+  }
+
+  const toggleOpen = () => {
+    setBoxOpen(!boxOpen)
   }
 
   useEffect(() => {
@@ -26,12 +44,34 @@ function InformationPanel() {
   }, [dispatch, source])
 
   return (
-    <div className={`information-panel ${source ? 'show' : ''}`}>
+    <div
+      className={classNames(
+        'information-panel',
+        {
+          show: source,
+          open: boxOpen,
+        },
+      )}
+    >
+      {!isDesktop && word && (
+        <div
+          className={
+            classNames(
+              'mobile-arrow',
+              { open: boxOpen }
+            )
+          }
+          onClick={toggleOpen}
+        >
+          <span className="material-symbols-outlined">expand_more</span>
+        </div>
+      )}
       <div className="contents">
         <div
           className={`info-hover ${word ? 'show' : ''}`}
           onMouseOver={handleMouseOver}
           onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
         >
           <span className="material-symbols-outlined">
             info

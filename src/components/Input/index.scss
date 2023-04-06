@@ -7,6 +7,10 @@
   backdrop-filter: blur(4px);
   border-radius: $border-radius;
 
+  @include media($break-sm) {
+    border-radius: 0;
+  }
+
   .input-form {
     width: 100%;
     background-color: transparent;
@@ -19,58 +23,25 @@
     display: flex;
     justify-content: center;
 
+    @include media($break-sm) {
+      flex-wrap: wrap;
+    }
+
     .input-box-container {
       flex: 2;
       position: relative;
+      display: flex;
+      background-color: rgba(255, 255, 255, 0.5);
 
-
-      .search-button-container {
-        height: 100%;
-        width: 2rem;
-        position: absolute;
-        right: 0.5rem;
-        top: 50%;
-        transform: translateY(-50%);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-
-        &::before {
-          content: '';
-          position: absolute;
-          border-left: 1px solid rgba(42, 71, 46, 0.4);
-          left: -0.5rem;
-          top: 50%;
-          height: 60%;
-          transform: translateY(-50%);
-        }
-
-        span {
-          color: $color-background;
-          transition: color 0.2s ease-out;
-
-          &:hover {
-            font-size: 1.7rem;
-          }
-        }
-
-        &.disabled {
-          cursor: default;
-
-          span {
-            color: rgba(0, 0, 0, 0.4);
-
-            &:hover {
-              font-size: 1.5rem;
-            }
-          }
-        }
+      @include media($break-sm) {
+        width: 100%;
+        flex: auto;
+        order: 2;
+        border-top: 1px solid rgba(42, 71, 46, 0.4);
       }
     }
     
     .input-box {
-      width: 100%;
       border: none;
       box-sizing: border-box;
       padding: 0.5rem 1rem;
@@ -82,7 +53,12 @@
       transition: all 200ms ease-out;
       border-left: 1px solid rgba(0, 0, 0, 0.4);
       border-right: 1px solid rgba(0, 0, 0, 0.4);
-      background-color: rgba(255, 255, 255, 0.5);
+      background-color: transparent;
+      
+      @include media($break-sm) {
+        width: 100%;
+        border: none;
+      }
   
       &::placeholder {
         color: $color-background;
@@ -100,27 +76,12 @@
     }
   }
 
-  .cancel-button-container {
+  .search-bar-button-container {
     height: 100%;
-    width: 2rem;
-    position: absolute;
-    right: 0.5rem;
-    top: 50%;
-    transform: translateY(-50%);
     display: flex;
     justify-content: center;
     align-items: center;
     cursor: pointer;
-
-    &::before {
-      content: '';
-      position: absolute;
-      border-left: 1px solid rgba(42, 71, 46, 0.4);
-      left: -0.5rem;
-      top: 50%;
-      height: 60%;
-      transform: translateY(-50%);
-    }
 
     span {
       color: $color-background;
@@ -130,6 +91,19 @@
         font-size: 1.7rem;
       }
     }
+
+    &.disabled {
+      cursor: default;
+      pointer-events: none;
+
+      span {
+        color: rgba(0, 0, 0, 0.4);
+
+        &:hover {
+          font-size: 1.5rem;
+        }
+      }
+    }
   }
 
   .lang-select-container {
@@ -137,6 +111,14 @@
     display: flex;
     justify-content: center;
     transition: all 0.2s ease-out;
+
+    @include media($break-sm) {
+      flex: auto;
+      width: 100%;
+      padding: 0.25rem 0;
+      order: 1;
+      box-sizing: border-box;
+    }
 
     &:hover {
       background-color: rgba(0, 0, 0, 0.1);
@@ -171,6 +153,19 @@
     display: flex;
     justify-content: center;
 
+    @include media($break-sm) {
+      flex: initial;
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    &.disabled {
+      pointer-events: none;
+      background-color: rgba(0, 0, 0, 0.1);
+    }
+
     .random-button {
       display: flex;
       align-items: center;
@@ -187,17 +182,36 @@
       cursor: pointer;
       transition: all 0.1s ease-out;
 
-      &:hover {
-        background-color: rgba(0, 0, 0, 0.1);
-      }
-
-      &.disabled {
-        pointer-events: none;
-        background-color: rgba(0, 0, 0, 0.1);
-      }
-
       span {
         margin-right: 0.5rem;
+      }
+
+      @include media($break-sm) {
+        font-size: 0;
+        padding: 0;
+        width: 24px;
+
+        span {
+          font-size: 1.2rem;
+          margin-right: 0;
+        }
+      }
+    }
+  }
+
+  .search-bar-button-container, .random-button-container {
+    @include media($break-sm) {
+      position: relative;
+      width: 3rem;
+
+      &::before {
+        content: '';
+        position: absolute;
+        border-left: 1px solid rgba(42, 71, 46, 0.4);
+        left: 0;
+        top: 50%;
+        height: 60%;
+        transform: translateY(-50%);
       }
     }
   }
@@ -211,7 +225,7 @@
     transition: all 0.1s ease-out;
     z-index: 3;
     transform: translateY(-100%);
-    
+
     &:hover {
       transform: translateY(-100%) scale(1.1);
     }
@@ -219,6 +233,15 @@
     span {
       vertical-align: bottom;
       font-size: 1.25rem;
+    }
+
+    @include media($break-sm) {
+      right: 0;
+      top: 0;
+
+      span {
+        padding: 0.3rem;
+      }
     }
   }
 }

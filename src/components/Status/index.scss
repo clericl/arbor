@@ -7,6 +7,10 @@
   transform: translateY(calc(-100% - 0.25rem));
   color: $color-background;
 
+  @include media($break-sm) {
+    left: 0.5rem;
+  }
+
   &.error {
     color: $color-error;
   }
