@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "/arbor/static/css/main.89f7d7b3.css",
-    "main.js": "/arbor/static/js/main.4a5ece94.js",
+    "main.css": "/arbor/static/css/main.64b5dc02.css",
+    "main.js": "/arbor/static/js/main.333ff415.js",
     "static/js/787.d076515c.chunk.js": "/arbor/static/js/787.d076515c.chunk.js",
     "static/media/book-loading.gif": "/arbor/static/media/book-loading.e6e9bd2ff4095147fcf8.gif",
     "index.html": "/arbor/index.html",
-    "main.89f7d7b3.css.map": "/arbor/static/css/main.89f7d7b3.css.map",
-    "main.4a5ece94.js.map": "/arbor/static/js/main.4a5ece94.js.map",
+    "main.64b5dc02.css.map": "/arbor/static/css/main.64b5dc02.css.map",
+    "main.333ff415.js.map": "/arbor/static/js/main.333ff415.js.map",
     "787.d076515c.chunk.js.map": "/arbor/static/js/787.d076515c.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.89f7d7b3.css",
-    "static/js/main.4a5ece94.js"
+    "static/css/main.64b5dc02.css",
+    "static/js/main.333ff415.js"
   ]
 }
