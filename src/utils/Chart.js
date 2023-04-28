@@ -85,12 +85,11 @@ class Chart {
       .classed("nodes", true)
 
     svg.call(d3.zoom()
-      .extent([[0, 0], [width, height]])
       .scaleExtent([1, 8])
       .on("zoom", zoomed))
 
     function zoomed({ transform }) {
-      svg.attr("transform", transform)
+      g.attr("transform", transform)
         .attr("font-size", (that.options.fontSize / (Math.pow(transform.k, 0.5))))
 
       g.select(".paths")
